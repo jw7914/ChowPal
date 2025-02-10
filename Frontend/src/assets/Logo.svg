@@ -1,0 +1,22 @@
+<svg
+  viewBox="0 0 100 100"
+  xmlns="http://www.w3.org/2000/svg"
+  stroke="black"
+  fill="none"
+  stroke-width="2"
+>
+  <!-- Figures -->
+  <circle cx="30" cy="30" r="5" />
+  <circle cx="70" cy="30" r="5" />
+  
+  <!-- Bodies -->
+  <line x1="30" y1="35" x2="30" y2="50" />
+  <line x1="70" y1="35" x2="70" y2="50" />
+  
+  <!-- Table -->
+  <line x1="20" y1="50" x2="80" y2="50" />
+  
+  <!-- Covered Meal -->
+  <path d="M40 45 Q50 35 60 45" />
+  <line x1="45" y1="45" x2="55" y2="45" />
+</svg>
