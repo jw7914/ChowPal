@@ -62,12 +62,15 @@ def authenticate_user(user_id):
 
 
 
+# that uid only exists in auth db, that can only be used for auth 
+# if we want like other things associated with them we need to use firestore db
 @app.post("/users/insert")
-def insert_user(email: str = Query(..., description="User email"), 
-                name: str = Query(..., description="User name"),
-                user_id: str = Query(..., description="Custom user ID")):
+def insert_user(data: dict): # Expects a json object
     
     "Parameters will be passed from the frontend"
+    user_id = data.get("uid")
+    email = data.get("email")
+    name = data.get("name")
 
     #Ensure user exists first before inserting any data
     if authenticate_user(user_id):
@@ -84,3 +87,54 @@ def insert_user(email: str = Query(..., description="User email"),
             return {"message": "User inserted successfully", "doc_id": user_id, "data": user_data}
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error inserting user: {e}")
+    else:
+        print("user doesn't exist")
+        return {"message": "User doesn't exist"}
+
+
+@app.put("/users/update")
+def update_user(data: dict):
+    """Update user details in Firestore."""
+    user_id = data.get("uid")
+    email = data.get("email")
+    name = data.get("name")
+
+    # Ensure user exists before updating
+    user_ref = db.collection("Users").document(user_id)
+    user_doc = user_ref.get()
+
+    if user_doc.exists:
+        try:
+            # Prepare update data
+            update_data = {}
+            if email:
+                update_data["email"] = email
+            if name:
+                update_data["name"] = name
+
+            if update_data:
+                user_ref.update(update_data)
+                return {"message": "User updated successfully", "doc_id": user_id, "updated_data": update_data}
+            else:
+                return {"message": "No fields provided for update"}
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error updating user: {e}")
+    else:
+        return {"message": "User does not exist"}
+
+@app.delete("/users/delete")
+def delete_user(user_id: str):
+    """Delete a user from Firestore."""
+    # Ensure user exists before deleting
+    user_ref = db.collection("Users").document(user_id)
+    user_doc = user_ref.get()
+
+    if user_doc.exists:
+        try:
+            user_ref.delete()
+            return {"message": "User deleted successfully", "doc_id": user_id}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error deleting user: {e}")
+    else:
+        return {"message": "User does not exist"}
