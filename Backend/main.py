@@ -1,5 +1,5 @@
 from typing import Union
-from firebase_admin import credentials, auth
+from firebase_admin import credentials, auth, firestore
 import firebase_admin
 import os
 from dotenv import load_dotenv
@@ -25,20 +25,62 @@ creds = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(creds)
 
 
+
+# Initialize Firestore
+db = firestore.client()
+
+# Create FastAPI app
+app = FastAPI()
+
+
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"message": "Hello, World!"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.get("/firebase")
-def authenticate_user(email: str = Query(..., description="User email to authenticate")):
+def authenticate_user(user_id):
     try:
-        user = auth.get_user_by_email(email)
-        return {"message": "User found", "uid": user.uid}
+        user = auth.get_user(user_id)
+        return True
+    except auth.UserNotFoundError:
+        raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Error finding user: {e}")
+        raise HTTPException(status_code=500, detail=f"Error checking user: {e}")
+
+# @app.get("/firebase")
+# def authenticate_user(email: str = Query(..., description="User email to authenticate")):
+#     """
+#     Authenticate a user by email using Firebase Authentication.
+#     """
+#     try:
+#         user = auth.get_user_by_email(email)
+#         return {"message": "User found", "uid": user.uid, "email": user.email}
+#     except auth.UserNotFoundError:
+#         raise HTTPException(status_code=404, detail="User not found")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Error finding user: {e}")
+
+
+
+@app.post("/users/insert")
+def insert_user(email: str = Query(..., description="User email"), 
+                name: str = Query(..., description="User name"),
+                user_id: str = Query(..., description="Custom user ID")):
+    
+    "Parameters will be passed from the frontend"
+
+    #Ensure user exists first before inserting any data
+    if authenticate_user(user_id):
+        try:
+            # Prepare user data
+            user_data = {
+                "email": email,
+                "name": name
+            }
+
+            
+            db.collection("Users").document(user_id).set(user_data)
+
+            return {"message": "User inserted successfully", "doc_id": user_id, "data": user_data}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error inserting user: {e}")
