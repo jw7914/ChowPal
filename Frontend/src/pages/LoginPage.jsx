@@ -1,73 +1,88 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   TextField,
   Button,
   Box,
   Typography,
   Container,
-  Avatar,
 } from "@mui/material";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import "./LoginPage.css"; // Import the CSS file
 
 const LoginPage = () => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  }, []);
+
   return (
-    <Container component="main" maxWidth="xs" style={{ marginTop: "8vh" }}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          boxShadow: 3,
-          p: 4,
-          borderRadius: 2,
-        }}
+    <div className="overlay-container">
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        className="background-video"
       >
-        <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
-          <LockOutlinedIcon />
-        </Avatar>
-        <Typography component="h1" variant="h5" gutterBottom>
-          Sign In
-        </Typography>
-        <Box
-          component="form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            // Handle login logic here
-          }}
-          noValidate
-          sx={{ mt: 1 }}
-        >
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
+        <source src="src/assets/login_bg.mp4" type="video/mp4" />
+      </video>
+      <div className="dark-overlay"></div> {/* Add this div for the dark overlay */}
+      <Container component="main" maxWidth="xs" className="login-container">
+        <Box className="login-container">
+          <img 
+            src="src/assets/chowpal_logo.png" 
+            alt="ChowPal Logo" 
+            className="logo"
           />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+          <div className="title">Chowpal</div>
+          <Box
+            component="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              // Handle login logic here
+            }}
+            noValidate
+            sx={{ mt: 1 }}
           >
-            Sign In
-          </Button>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              InputLabelProps={{ style: { color: '#fff' } }} /* White label color */
+              InputProps={{ style: { borderColor: '#fff', color: '#fff' } }} /* White border and input text color */
+            />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              InputLabelProps={{ style: { color: '#fff' } }} /* White label color */
+              InputProps={{ style: { borderColor: '#fff', color: '#fff' } }} /* White border and input text color */
+            />
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              className="SignInButton"
+              sx={{ mt: 3, mb: 2 }}
+            >
+              Sign In
+            </Button>
+          </Box>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </div>
   );
 };
 
