@@ -5,8 +5,9 @@ import {
   Box,
   Typography,
   Container,
+  Link,
 } from "@mui/material";
-import "./LoginPage.css"; // Import the CSS file
+import "./LoginPage.css";
 
 const LoginPage = () => {
   const videoRef = useRef(null);
@@ -19,21 +20,16 @@ const LoginPage = () => {
 
   return (
     <div className="overlay-container">
-      <video
-        ref={videoRef}
-        autoPlay
-        loop
-        muted
-        className="background-video"
-      >
+      <video ref={videoRef} autoPlay loop muted className="background-video">
         <source src="src/assets/login_bg.mp4" type="video/mp4" />
       </video>
-      <div className="dark-overlay"></div> {/* Add this div for the dark overlay */}
+      <div className="dark-overlay"></div>{" "}
+      {/* Add this div for the dark overlay */}
       <Container component="main" maxWidth="xs" className="login-container">
         <Box className="login-container">
-          <img 
-            src="src/assets/chowpal_logo.png" 
-            alt="ChowPal Logo" 
+          <img
+            src="src/assets/chowpal_logo.png"
+            alt="ChowPal Logo"
             className="logo"
           />
           <div className="title">Chowpal</div>
@@ -55,8 +51,12 @@ const LoginPage = () => {
               name="email"
               autoComplete="email"
               autoFocus
-              InputLabelProps={{ style: { color: '#fff' } }} /* White label color */
-              InputProps={{ style: { borderColor: '#fff', color: '#fff' } }} /* White border and input text color */
+              InputLabelProps={{
+                style: { color: "#fff" },
+              }} /* White label color */
+              InputProps={{
+                style: { borderColor: "#fff", color: "#fff" },
+              }} /* White border and input text color */
             />
             <TextField
               margin="normal"
@@ -67,8 +67,12 @@ const LoginPage = () => {
               type="password"
               id="password"
               autoComplete="current-password"
-              InputLabelProps={{ style: { color: '#fff' } }} /* White label color */
-              InputProps={{ style: { borderColor: '#fff', color: '#fff' } }} /* White border and input text color */
+              InputLabelProps={{
+                style: { color: "#fff" },
+              }} /* White label color */
+              InputProps={{
+                style: { borderColor: "#fff", color: "#fff" },
+              }} /* White border and input text color */
             />
             <Button
               type="submit"
@@ -80,6 +84,12 @@ const LoginPage = () => {
               Sign In
             </Button>
           </Box>
+          <Typography variant="h6">
+            Don't have an account?{" "}
+            <Link href="/register" underline="none">
+              Sign up here
+            </Link>
+          </Typography>
         </Box>
       </Container>
     </div>
