@@ -54,6 +54,10 @@ body, html {
     margin-bottom: 1rem; /* Adds space below the text */
     color:#26313b;
   }
+
+  .custom-link {
+    color: #fdc3c2; /* Pink color */
+  }
   
   button.SignInButton {
     background-color: #fff; /* White button background */

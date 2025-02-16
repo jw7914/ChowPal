@@ -84,10 +84,10 @@ const LoginPage = () => {
               Sign In
             </Button>
           </Box>
-          <Typography variant="h6">
+          <Typography variant="p1">
             Don't have an account?{" "}
-            <Link href="/register" underline="none">
-              Sign up here
+            <Link href="/" underline="none" className="custom-link">
+              Sign in here
             </Link>
           </Typography>
         </Box>

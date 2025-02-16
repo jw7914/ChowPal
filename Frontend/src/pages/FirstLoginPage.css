@@ -1,0 +1,106 @@
+/* FirstLoginPage.css */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: 'Pacifico', cursive; /* Apply the imported font */
+  }
+  
+  .background-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+  }
+  
+  .overlay-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .dark-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Adjust the opacity as needed */
+    z-index: -1;
+  }
+  
+  .center-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Style for the first login container */
+  .first-login-container {
+    margin-top: 75px;
+    background-color: rgba(246, 244, 241, 0.95); 
+    width: 80%; 
+    height: 65vh; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Changed to flex-start to reduce gap */
+    border-radius: 8px;
+    padding: 2rem;
+  }
+  
+  /* Style for the title */
+  .title {
+    font-size: 36px;
+    font-weight: 900;
+    margin-bottom: 5rem; /* Reduced gap */
+    font-family: "Poiret One", serif;
+  }
+  
+  /* Style for the bottom section */
+  .bottom-section {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem; /* Added margin-top to create space */
+  }
+  
+  /* Style for the left section */
+  .left-section {
+    width: 45%;
+    display: flex;
+    flex-direction: column; /* Ensures vertical stacking */
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .dotted-container {
+    width: 90%;
+    height: 155px;
+    border: 2px dashed #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Style for the right section */
+  .right-section {
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Remove the bottom button style from the CSS as it's now styled with sx */
+  .bottom-button {
+    display: none;
+  }
+  
