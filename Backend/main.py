@@ -4,6 +4,7 @@ import firebase_admin
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
+import requests, json
 load_dotenv()
 app = FastAPI()
 
@@ -37,6 +38,9 @@ app = FastAPI()
 def read_root():
     return {"message": "Hello, World!"}
 
+#================================================================================================
+# User Management
+#================================================================================================
 
 def authenticate_user(user_id):
     try:
@@ -138,3 +142,28 @@ def delete_user(user_id: str):
             raise HTTPException(status_code=500, detail=f"Error deleting user: {e}")
     else:
         return {"message": "User does not exist"}
+
+#================================================================================================
+# Places API Handling
+#================================================================================================
+PLACES_API_KEY = os.getenv("PLACES_API_KEY")
+
+def search_places_text(query, specifications):
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
+    #in the form of an array of tuples: [('specification1', 'value1'), ('specification2', 'value2')]
+    #only works for maxprice, minprice, opennow, type alr default(restaurant), and pagetoken
+    if(specifications):
+        for spec in specifications:
+            if spec[2] == 'None':
+                query += "&" + spec[0]
+            else:
+                query += "&" + spec[0] + "=" + spec[1]
+    r=requests.get(url + 'query=' + query + '&type=restaurant' + '&key=' + PLACES_API_KEY)
+    x=r.json()
+    return x['results']
+
+def search_places_nearby(location, radius):
+    url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?"
+    r=requests.get(url + 'location=' + location + '&radius=' + radius + '&type=restaurant' + '&key=' + PLACES_API_KEY)
+    x=r.json()
+    return x['results']
