@@ -86,8 +86,8 @@ const LoginPage = () => {
           </Box>
           <Typography variant="p1">
             Don't have an account?{" "}
-            <Link href="/" underline="none" className="custom-link">
-              Sign in here
+            <Link href="/register" underline="none" className="custom-link">
+              Sign up here
             </Link>
           </Typography>
         </Box>
