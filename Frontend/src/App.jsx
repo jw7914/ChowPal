@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import FirstLoginPage from "./pages/FirstLoginPage";
+import RegisterBack from "./pages/RegisterBack";
 
 function App() {
   return (
@@ -12,7 +13,7 @@ function App() {
       <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/firstlogin" element={<FirstLoginPage />} />
-
+      <Route path="/test" element={<RegisterBack />} />
     </Routes>
   );
 }

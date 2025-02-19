@@ -22,7 +22,7 @@ const errorMessages = {
   "auth/internal-error": "An internal error occurred. Try again later.",
 };
 
-const RegisterPage = () => {
+const RegisterBack = () => {
   const videoRef = useRef(null);
   const auth = getAuth();
   const navigate = useNavigate();
@@ -191,4 +191,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default RegisterBack;
