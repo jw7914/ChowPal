@@ -4,6 +4,7 @@ import firebase_admin
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
+import firebase_admin.auth
 import requests, json
 load_dotenv()
 app = FastAPI()
@@ -30,9 +31,14 @@ firebase_admin.initialize_app(creds)
 # Initialize Firestore
 db = firestore.client()
 
+
+def get_user(idToken):
+    decoded_token = auth.verify_id_token(idToken)
+    return decoded_token["uid"]
+
+
 # Create FastAPI app
 app = FastAPI()
-
 
 @app.get("/")
 def read_root():
@@ -72,12 +78,15 @@ def authenticate_user(user_id):
 def insert_user(data: dict): # Expects a json object
     
     "Parameters will be passed from the frontend"
-    user_id = data.get("uid")
+    idToken = data.get("idToken")
     email = data.get("email")
     name = data.get("name")
 
-    #Ensure user exists first before inserting any data
-    if authenticate_user(user_id):
+    user_id = get_user(idToken) #Verify idToken from firebase auth
+    if not user_id:
+        print("user doesn't exist")
+        return {"message": "User doesn't exist"}
+    else:
         try:
             # Prepare user data
             user_data = {
@@ -91,18 +100,13 @@ def insert_user(data: dict): # Expects a json object
             return {"message": "User inserted successfully", "doc_id": user_id, "data": user_data}
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error inserting user: {e}")
-    else:
-        print("user doesn't exist")
-        return {"message": "User doesn't exist"}
-
 
 @app.put("/users/update")
 def update_user(data: dict):
     """Update user details in Firestore."""
-    user_id = data.get("uid")
+    user_id = data.get("idToken")
     email = data.get("email")
     name = data.get("name")
-
     # Ensure user exists before updating
     user_ref = db.collection("Users").document(user_id)
     user_doc = user_ref.get()
