@@ -1,13 +1,15 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword } from "firebase/auth";
 import { firebaseapp } from "../firebase/firebaseconfig";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore"; // Firestore imports
 import { TextField, Button, Box, Typography, Container, Link, Divider } from "@mui/material";
 import "./LoginPage.css";
 import GoogleIcon from "@mui/icons-material/Google";
 
 const auth = getAuth(firebaseapp);
 const provider = new GoogleAuthProvider();
+const firestore = getFirestore(firebaseapp); // Firestore instance
 
 const LoginPage = ({ setUser }) => {
   const videoRef = useRef(null);
@@ -19,15 +21,49 @@ const LoginPage = ({ setUser }) => {
     }
   }, []);
 
+  const handleFirstLoginCheck = async (user) => {
+    const userDocRef = doc(firestore, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      if (userData.isFirstLogin) {
+        navigate("/firstlogin");
+      } else {
+        navigate("/home");
+      }
+    } else {
+      // Create the user document if it doesn't exist
+      await setDoc(userDocRef, { isFirstLogin: true, ...user.providerData[0] });
+      navigate("/firstlogin");
+    }
+  };
+
   const handleGoogleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       console.log("User Info:", user);
       setUser(user);
-      navigate("/home");
+      await handleFirstLoginCheck(user);
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
+    }
+  };
+
+  const handleEmailLogin = async (event) => {
+    event.preventDefault();
+    const email = event.target.email.value;
+    const password = event.target.password.value;
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("User Info:", user);
+      setUser(user);
+      await handleFirstLoginCheck(user);
+    } catch (error) {
+      console.error("Email Sign-In Error:", error.message);
     }
   };
 
@@ -52,7 +88,7 @@ const LoginPage = ({ setUser }) => {
             Sign in with Google
           </Button>
           <Divider sx={{ my: 2, width: "100%", fontSize: "2rem" }}>or</Divider>
-          <Box component="form" noValidate sx={{ mt: 1 }}>
+          <Box component="form" noValidate sx={{ mt: 1 }} onSubmit={handleEmailLogin}>
             <TextField
               margin="normal"
               required

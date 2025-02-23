@@ -1,15 +1,53 @@
 import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, TextField, Button } from "@mui/material";
+import { getAuth, updateProfile } from "firebase/auth"; // Import updateProfile from Firebase Auth
+import { getFirestore, doc, updateDoc } from "firebase/firestore";
 import "./FirstLoginPage.css";
+
+const firestore = getFirestore();
+const auth = getAuth();
 
 const FirstLoginPage = () => {
   const videoRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.play();
     }
   }, []);
+
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    const name = event.target.name.value;
+    const favoriteCuisine = event.target.favoriteCuisine.value;
+    const location = event.target.location.value;
+
+    const user = auth.currentUser;
+    if (user) {
+      const userDocRef = doc(firestore, "users", user.uid);
+      try {
+        // Update Firestore
+        await updateDoc(userDocRef, {
+          name: name,
+          favoriteCuisine: favoriteCuisine,
+          location: location,
+          isFirstLogin: false,
+        });
+
+        // Update Firebase Auth profile using updateProfile method from Firebase Auth
+        await updateProfile(user, { displayName: name });
+
+        console.log("User information updated successfully.");
+        navigate("/home");
+      } catch (error) {
+        console.error("Error updating user information: ", error);
+      }
+    } else {
+      console.error("No authenticated user found.");
+    }
+  };
 
   return (
     <div className="overlay-container">
@@ -26,47 +64,50 @@ const FirstLoginPage = () => {
               <Button variant="outlined" sx={{ marginTop: '1rem' }}>Upload Photo</Button>
             </div>
             <div className="right-section">
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="name"
-                label="My name is"
-                name="name"
-                autoComplete="name"
-                autoFocus
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="favoriteCuisine"
-                label="My favorite cuisine is"
-                name="favoriteCuisine"
-                autoComplete="favoriteCuisine"
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="location"
-                label="I am from"
-                name="location"
-                autoComplete="location"
-              />
+              <form onSubmit={handleFormSubmit}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="name"
+                  label="My name is"
+                  name="name"
+                  autoComplete="name"
+                  autoFocus
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="favoriteCuisine"
+                  label="My favorite cuisine is"
+                  name="favoriteCuisine"
+                  autoComplete="favoriteCuisine"
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="location"
+                  label="I am from"
+                  name="location"
+                  autoComplete="location"
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    position: 'absolute',
+                    bottom: '2rem',
+                    right: '14rem',
+                    width: '200px',
+                  }}
+                >
+                  {"That's me ->"}
+                </Button>
+              </form>
             </div>
           </div>
-          <Button
-            variant="contained"
-            sx={{
-              position: 'absolute',
-              bottom: '2rem',
-              right: '14rem',
-              width: '200px'
-            }}
-          >
-            {"That's me ->"}
-          </Button>
         </Box>
       </div>
     </div>
