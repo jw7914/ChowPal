@@ -1,23 +1,17 @@
 import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { firebaseapp } from "../firebase/firebaseconfig"; // Ensure firebaseconfig is correctly set up
-import {
-  TextField,
-  Button,
-  Box,
-  Typography,
-  Container,
-  Link,
-  Divider,
-} from "@mui/material";
+import { firebaseapp } from "../firebase/firebaseconfig";
+import { TextField, Button, Box, Typography, Container, Link, Divider } from "@mui/material";
 import "./LoginPage.css";
 import GoogleIcon from "@mui/icons-material/Google";
-// Initialize Firebase Auth
+
 const auth = getAuth(firebaseapp);
 const provider = new GoogleAuthProvider();
 
-const LoginPage = () => {
+const LoginPage = ({ setUser }) => {
   const videoRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (videoRef.current) {
@@ -30,7 +24,8 @@ const LoginPage = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       console.log("User Info:", user);
-      // Redirect user or update UI after successful login
+      setUser(user);
+      navigate("/home");
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
     }
@@ -44,11 +39,7 @@ const LoginPage = () => {
       <div className="dark-overlay"></div>
       <Container component="main" maxWidth="xs" className="login-container">
         <Box className="login-container">
-          <img
-            src="src/assets/chowpal_logo.png"
-            alt="ChowPal Logo"
-            className="logo"
-          />
+          <img src="src/assets/chowpal_logo.png" alt="ChowPal Logo" className="logo" />
           <div className="title">Chowpal</div>
           <Button
             fullWidth
@@ -86,13 +77,7 @@ const LoginPage = () => {
               InputLabelProps={{ style: { color: "#fff" } }}
               InputProps={{ style: { borderColor: "#fff", color: "#fff" } }}
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              className="SignInButton"
-              sx={{ mt: 3, mb: 2 }}
-            >
+            <Button type="submit" fullWidth variant="contained" className="SignInButton" sx={{ mt: 3, mb: 2 }}>
               Sign In
             </Button>
           </Box>
