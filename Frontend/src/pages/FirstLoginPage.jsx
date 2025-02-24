@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, TextField, Button } from "@mui/material";
-import { getAuth, updateProfile } from "firebase/auth"; // Import updateProfile from Firebase Auth
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import "./FirstLoginPage.css";
+import { handleInsertUser } from "../firebase/firestoreFunctions";
 
-const firestore = getFirestore();
 const auth = getAuth();
 
 const FirstLoginPage = () => {
@@ -20,32 +19,20 @@ const FirstLoginPage = () => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    const name = event.target.name.value;
-    const favoriteCuisine = event.target.favoriteCuisine.value;
-    const location = event.target.location.value;
-
-    const user = auth.currentUser;
-    if (user) {
-      const userDocRef = doc(firestore, "users", user.uid);
-      try {
-        // Update Firestore
-        await updateDoc(userDocRef, {
-          name: name,
-          favoriteCuisine: favoriteCuisine,
-          location: location,
-          isFirstLogin: false,
-        });
-
-        // Update Firebase Auth profile using updateProfile method from Firebase Auth
-        await updateProfile(user, { displayName: name });
-
-        console.log("User information updated successfully.");
+    const idToken = await auth.currentUser.getIdToken();
+    const data = {
+      idToken: idToken,
+      name: event.target.name.value,
+      favoriteCuisine: event.target.favoriteCuisine.value,
+      location: event.target.location.value,
+    };
+    try {
+      const success = await handleInsertUser(data);
+      if (success) {
         navigate("/home");
-      } catch (error) {
-        console.error("Error updating user information: ", error);
       }
-    } else {
-      console.error("No authenticated user found.");
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -61,7 +48,9 @@ const FirstLoginPage = () => {
           <div className="bottom-section">
             <div className="left-section">
               <Box className="dotted-container"></Box>
-              <Button variant="outlined" sx={{ marginTop: '1rem' }}>Upload Photo</Button>
+              <Button variant="outlined" sx={{ marginTop: "1rem" }}>
+                Upload Photo
+              </Button>
             </div>
             <div className="right-section">
               <form onSubmit={handleFormSubmit}>
@@ -97,10 +86,10 @@ const FirstLoginPage = () => {
                   type="submit"
                   variant="contained"
                   sx={{
-                    position: 'absolute',
-                    bottom: '2rem',
-                    right: '14rem',
-                    width: '200px',
+                    position: "absolute",
+                    bottom: "2rem",
+                    right: "14rem",
+                    width: "200px",
                   }}
                 >
                   {"That's me ->"}

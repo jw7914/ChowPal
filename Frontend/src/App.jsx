@@ -24,14 +24,13 @@ function App() {
   }, []);
 
   return (
-      <Routes>
-        <Route path="/" element={<LoginPage setUser={setUser} />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/firstlogin" element={<FirstLoginPage />} />
-        <Route path="/home" element={<HomePage user={user} />} />
-      </Routes>
+    <Routes>
+      <Route path="/" element={<LoginPage setUser={setUser} />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/firstlogin" element={<FirstLoginPage />} />
+      <Route path="/home" element={<HomePage user={user} />} />
+    </Routes>
   );
 }
 
 export default App;
-

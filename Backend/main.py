@@ -3,9 +3,10 @@ from firebase_admin import credentials, auth, firestore
 import firebase_admin
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 import firebase_admin.auth
 import requests, json
+from fastapi.middleware.cors import CORSMiddleware
 load_dotenv()
 app = FastAPI()
 
@@ -32,14 +33,16 @@ firebase_admin.initialize_app(creds)
 db = firestore.client()
 
 
-def get_user(idToken):
-    decoded_token = auth.verify_id_token(idToken)
-    return decoded_token["uid"]
-
-
 # Create FastAPI app
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], 
+    allow_credentials=True,                  
+    allow_methods=["*"],                     
+    allow_headers=["*"],                     
+)
 @app.get("/")
 def read_root():
     return {"message": "Hello, World!"}
@@ -48,14 +51,12 @@ def read_root():
 # User Management
 #================================================================================================
 
-def authenticate_user(user_id):
+def get_user(idToken):
     try:
-        user = auth.get_user(user_id)
-        return True
-    except auth.UserNotFoundError:
-        raise HTTPException(status_code=404, detail="User not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error checking user: {e}")
+        decoded_token = auth.verify_id_token(idToken)  
+        return decoded_token["uid"] 
+    except Exception:
+        return None
 
 # @app.get("/firebase")
 # def authenticate_user(email: str = Query(..., description="User email to authenticate")):
@@ -74,32 +75,85 @@ def authenticate_user(user_id):
 
 # that uid only exists in auth db, that can only be used for auth 
 # if we want like other things associated with them we need to use firestore db
-@app.post("/users/insert")
-def insert_user(data: dict): # Expects a json object
+@app.get("/users")
+def login_check(idToken: str = Query(...)):
+    if not idToken:
+        raise HTTPException(status_code=400, detail="Missing ID token")
     
-    "Parameters will be passed from the frontend"
-    idToken = data.get("idToken")
-    email = data.get("email")
-    name = data.get("name")
+    uid = get_user(idToken)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid user token")
+    
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
 
-    user_id = get_user(idToken) #Verify idToken from firebase auth
-    if not user_id:
-        print("user doesn't exist")
-        return {"message": "User doesn't exist"}
+    # Check if the document exists
+    if not user_doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Return the user document data
+    return user_doc.to_dict()
+
+    
+@app.get("/users/login-check")
+def login_check(idToken: str = Query(...)):  # Using Query to retrieve idToken from the query string
+    if not idToken:
+        raise HTTPException(status_code=400, detail="Missing ID token")
+
+    uid = get_user(idToken)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid user token")
+
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+
+    if not user_doc.exists:
+        user_ref.set({"firstLogin": True})
+        first_login = True
     else:
-        try:
-            # Prepare user data
-            user_data = {
-                "email": email,
-                "name": name
-            }
+        user_data = user_doc.to_dict()
+        first_login = user_data.get("firstLogin", False)
 
-            
-            db.collection("Users").document(user_id).set(user_data)
+    return {"redirect": "/firstlogin" if first_login else "/home"}
 
-            return {"message": "User inserted successfully", "doc_id": user_id, "data": user_data}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error inserting user: {e}")
+@app.post("/users/insert")
+async def insert_user(request: Request):
+    # Get the data from the request body as a dictionary
+    data = await request.json()
+
+    # Extract idToken from the data
+    id_token = data.get("idToken")
+    if not id_token:
+        raise HTTPException(status_code=400, detail="Missing ID token")
+
+    # Validate the user token and get the user ID
+    uid = get_user(id_token)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid user token")
+
+    # Reference to the Firestore user document
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+
+    if not user_doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Extract other user information from the data
+    name = data.get("name")
+    email = data.get("email")
+    favoriteCuisine = data.get("favoriteCuisine")
+    location = data.get("location")
+
+    # Update Firestore document: mark firstLogin as False and store extra info
+    user_ref.update({
+        "firstLogin": False,
+        "name": name,  
+        "email": email, 
+        "favoriteCuisine": favoriteCuisine,
+        "location": location
+    })
+
+    return True
 
 @app.put("/users/update")
 def update_user(data: dict):
@@ -146,7 +200,8 @@ def delete_user(user_id: str):
             raise HTTPException(status_code=500, detail=f"Error deleting user: {e}")
     else:
         return {"message": "User does not exist"}
-
+    
+    
 #================================================================================================
 # Places API Handling
 #================================================================================================
