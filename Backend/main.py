@@ -226,3 +226,5 @@ def search_places_nearby(location, radius):
     r=requests.get(url + 'location=' + location + '&radius=' + radius + '&type=restaurant' + '&key=' + PLACES_API_KEY)
     x=r.json()
     return x['results']
+
+print(search_places_nearby("40.65010000,-73.949580000","200"))
