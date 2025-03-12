@@ -22,7 +22,7 @@ export async function handleInsertUser(data) {
 
 export async function getUserDetails(idToken) {
   try {
-    const response = await app.get(`/usersidToken=${idToken}`);
+    const response = await app.get(`/users?idToken=${idToken}`);
     return response.data;
   } catch (err) {
     return err;

@@ -19,12 +19,11 @@ import {
 import "./LoginPage.css";
 import GoogleIcon from "@mui/icons-material/Google";
 import { handleFirstLogin } from "../firebase/firestoreFunctions";
-import { red } from "@mui/material/colors";
 
 const auth = getAuth(firebaseapp);
 const provider = new GoogleAuthProvider();
 
-const LoginPage = ({ setUser }) => {
+const LoginPage = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
 
@@ -39,7 +38,6 @@ const LoginPage = ({ setUser }) => {
       const result = await signInWithPopup(auth, provider);
       const idToken = await auth.currentUser.getIdToken();
       const redirect = await handleFirstLogin(idToken);
-      setUser(result.user);
       navigate(redirect["redirect"]);
     } catch (error) {
       console.error("Google Sign-In Error:", error.message);
@@ -59,7 +57,6 @@ const LoginPage = ({ setUser }) => {
       );
       const user = userCredential.user;
       console.log("User Info:", user);
-      setUser(user);
       await handleFirstLoginCheck(user);
     } catch (error) {
       console.error("Email Sign-In Error:", error.message);
