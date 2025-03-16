@@ -1,11 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { firebaseapp } from "../firebase/firebaseconfig";
 import {
   TextField,
@@ -16,14 +11,16 @@ import {
   Link,
   Divider,
 } from "@mui/material";
-import GoogleIcon from "@mui/icons-material/Google";
 import "./LoginPage.css";
-import { handleFirstLogin } from "../firebase/firestoreFunctions";
+import {
+  handleFirstLogin,
+  handleInsertUser,
+} from "../firebase/firestoreFunctions";
 
 const auth = getAuth(firebaseapp);
-const provider = new GoogleAuthProvider();
 
 const RestaurantLoginPage = () => {
+  const navigate = useNavigate();
   const handleEmailLogin = async (event) => {
     event.preventDefault();
     const email = event.target.email.value;
@@ -35,9 +32,15 @@ const RestaurantLoginPage = () => {
         email,
         password
       );
-      const user = userCredential.user;
-      console.log("User Info:", user);
-      await handleFirstLogin(user);
+      const idToken = await auth.currentUser.getIdToken();
+      const data = {
+        idToken: idToken,
+        email: email,
+        accountType: "restaurant",
+      };
+      await handleFirstLogin(idToken);
+      await handleInsertUser(data);
+      navigate("/");
     } catch (error) {
       console.error("Email Sign-In Error:", error.message);
     }

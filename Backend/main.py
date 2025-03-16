@@ -150,11 +150,7 @@ async def insert_user(request: Request):
         })
     elif (accountType == "restaurant"):
         user_ref.update({
-            "firstLogin": False,
-            "name": data.get("name"),  
             "email": data.get("email"), 
-            "favoriteCuisine": data.get("favoriteCuisine"),
-            "location": data.get("location"),
             "accountType": accountType
         })
 

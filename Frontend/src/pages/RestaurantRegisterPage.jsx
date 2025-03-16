@@ -35,7 +35,6 @@ const RestaurantRegisterPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    restaurantName: "",
   });
   const [error, setError] = useState("");
   const [openErrorModal, setOpenErrorModal] = useState(false);
@@ -107,20 +106,6 @@ const RestaurantRegisterPage = () => {
             noValidate
             sx={{ mt: 1 }}
           >
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="restaurantName"
-              label="Restaurant Name"
-              name="restaurantName"
-              autoComplete="organization"
-              autoFocus
-              onChange={handleChange}
-              value={formData.restaurantName}
-              InputLabelProps={{ style: { color: "#fff" } }}
-              InputProps={{ style: { borderColor: "#fff", color: "#fff" } }}
-            />
             <TextField
               margin="normal"
               required

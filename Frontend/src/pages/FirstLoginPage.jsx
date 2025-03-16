@@ -25,11 +25,13 @@ const FirstLoginPage = () => {
       name: event.target.name.value,
       favoriteCuisine: event.target.favoriteCuisine.value,
       location: event.target.location.value,
+      email: auth.currentUser.email,
+      accountType: "user",
     };
     try {
       const success = await handleInsertUser(data);
       if (success) {
-        navigate("/home");
+        navigate("/");
       }
     } catch (err) {
       console.error(err);

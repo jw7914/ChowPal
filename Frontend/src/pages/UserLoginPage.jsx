@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getAuth,
@@ -15,6 +15,7 @@ import {
   Container,
   Link,
   Divider,
+  Alert,
 } from "@mui/material";
 import "./LoginPage.css";
 import GoogleIcon from "@mui/icons-material/Google";
@@ -26,6 +27,7 @@ const provider = new GoogleAuthProvider();
 const LoginPage = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (videoRef.current) {
@@ -35,11 +37,13 @@ const LoginPage = () => {
 
   const handleGoogleLogin = async () => {
     try {
+      setErrorMessage(""); // Clear previous errors
       await signInWithPopup(auth, provider);
       const idToken = await auth.currentUser.getIdToken();
       const redirect = await handleFirstLogin(idToken);
       navigate(redirect["redirect"]);
     } catch (error) {
+      setErrorMessage("Google Sign-In failed. Please try again.");
       console.error("Google Sign-In Error:", error.message);
     }
   };
@@ -50,16 +54,13 @@ const LoginPage = () => {
     const password = event.target.password.value;
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      console.log("User Info:", user);
-      await handleFirstLoginCheck(user);
+      setErrorMessage(""); // Clear previous errors
+      await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await auth.currentUser.getIdToken();
+      const redirect = await handleFirstLogin(idToken);
       navigate(redirect["redirect"]);
     } catch (error) {
+      setErrorMessage("Invalid email or password. Please try again.");
       console.error("Email Sign-In Error:", error.message);
     }
   };
@@ -131,10 +132,19 @@ const LoginPage = () => {
           </Box>
           <Typography variant="body1">
             Don't have an account?{" "}
-            <Link href="/register" underline="none" className="custom-link">
+            <Link
+              href="/user-register"
+              underline="none"
+              className="custom-link"
+            >
               Sign up here
             </Link>
           </Typography>
+          {errorMessage && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
         </Box>
       </Container>
     </div>
