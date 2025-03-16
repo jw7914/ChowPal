@@ -1,17 +1,38 @@
-import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
+import LoginPage from "./pages/UserLoginPage";
 import FirstLoginPage from "./pages/FirstLoginPage";
-import RegisterPage from "./pages/RegisterPage";
+import RegisterPage from "./pages/UserRegisterPage";
 import HomePage from "./pages/HomePage";
+import NotFoundPage from "./pages/NotFoundPage";
+import RestaurantRegisterPage from "./pages/RestaurantRegisterPage";
+import RestaurantLoginPage from "./pages/RestaurantLoginPage";
 
+const Logout = () => {
+  const navigate = useNavigate();
+  const auth = getAuth();
+
+  signOut(auth)
+    .then(() => {
+      navigate("/"); // Redirect to home page after logout
+    })
+    .catch((error) => {
+      console.error("Logout Error:", error.message);
+    });
+
+  return null; // This ensures the page doesn’t render anything
+};
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/restaurant-login" element={<RestaurantLoginPage />} />
+      <Route path="/restaurant-register" element={<RestaurantRegisterPage />} />
       <Route path="/firstlogin" element={<FirstLoginPage />} />
-      <Route path="/home" element={<HomePage />} />
+      <Route path="/user-login" element={<LoginPage />} />
+      <Route path="/user-register" element={<RegisterPage />} />
+      {/* Temp logout route for functionality */}
+      <Route path="/logout" element={<Logout />} />
+      <Route path="*" element={<NotFoundPage />} /> {/* Catch-all route */}
     </Routes>
   );
 }

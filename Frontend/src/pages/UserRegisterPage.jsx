@@ -1,5 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { firebaseapp } from "../firebase/firebaseconfig";
 import {
@@ -40,6 +45,17 @@ const RegisterPage = () => {
     }
   }, []);
 
+  // Redirect if the user is already logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate("/");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, navigate]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -59,7 +75,8 @@ const RegisterPage = () => {
         formData.email,
         formData.password
       );
-      navigate("/");
+      await signOut(auth);
+      navigate("/user-login");
     } catch (error) {
       const errorMessage =
         errorMessages[error.code] || "An unknown error occurred.";

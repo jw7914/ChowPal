@@ -35,7 +35,7 @@ const LoginPage = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
+      await signInWithPopup(auth, provider);
       const idToken = await auth.currentUser.getIdToken();
       const redirect = await handleFirstLogin(idToken);
       navigate(redirect["redirect"]);
@@ -58,6 +58,7 @@ const LoginPage = () => {
       const user = userCredential.user;
       console.log("User Info:", user);
       await handleFirstLoginCheck(user);
+      navigate(redirect["redirect"]);
     } catch (error) {
       console.error("Email Sign-In Error:", error.message);
     }

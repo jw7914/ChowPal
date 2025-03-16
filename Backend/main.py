@@ -114,7 +114,7 @@ def login_check(idToken: str = Query(...)):  # Using Query to retrieve idToken f
         user_data = user_doc.to_dict()
         first_login = user_data.get("firstLogin", False)
 
-    return {"redirect": "/firstlogin" if first_login else "/home"}
+    return {"redirect": "/firstlogin" if first_login else "/"}
 
 @app.post("/users/insert")
 async def insert_user(request: Request):
@@ -137,21 +137,26 @@ async def insert_user(request: Request):
 
     if not user_doc.exists:
         raise HTTPException(status_code=404, detail="User not found")
-
-    # Extract other user information from the data
-    name = data.get("name")
-    email = data.get("email")
-    favoriteCuisine = data.get("favoriteCuisine")
-    location = data.get("location")
-
-    # Update Firestore document: mark firstLogin as False and store extra info
-    user_ref.update({
-        "firstLogin": False,
-        "name": name,  
-        "email": email, 
-        "favoriteCuisine": favoriteCuisine,
-        "location": location
-    })
+    
+    accountType = data.get("accountType")
+    if (accountType == "user"):
+        user_ref.update({
+            "firstLogin": False,
+            "name": data.get("name"),  
+            "email": data.get("email"), 
+            "favoriteCuisine": data.get("favoriteCuisine"),
+            "location": data.get("location"),
+            "accountType": accountType
+        })
+    elif (accountType == "restaurant"):
+        user_ref.update({
+            "firstLogin": False,
+            "name": data.get("name"),  
+            "email": data.get("email"), 
+            "favoriteCuisine": data.get("favoriteCuisine"),
+            "location": data.get("location"),
+            "accountType": accountType
+        })
 
     return True
 
