@@ -16,7 +16,7 @@ import {
   Link,
   Modal,
 } from "@mui/material";
-import "./LoginPage.css";
+import "./RestaurantLoginPage.css";
 
 const errorMessages = {
   "auth/email-already-in-use":

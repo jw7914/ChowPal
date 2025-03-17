@@ -11,7 +11,7 @@ import {
   Link,
   Divider,
 } from "@mui/material";
-import "./LoginPage.css";
+import "./RestaurantLoginPage.css";
 import {
   handleFirstLogin,
   handleInsertUser,

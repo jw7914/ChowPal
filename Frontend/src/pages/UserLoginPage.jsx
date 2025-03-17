@@ -17,7 +17,7 @@ import {
   Divider,
   Alert,
 } from "@mui/material";
-import "./LoginPage.css";
+import "./UserLoginPage.css";
 import GoogleIcon from "@mui/icons-material/Google";
 import { handleFirstLogin } from "../firebase/firestoreFunctions";
 

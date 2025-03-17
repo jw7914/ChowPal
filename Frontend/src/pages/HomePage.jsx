@@ -8,6 +8,12 @@ import {
 import { getFirebaseUser } from "../firebase/firebaseUtility";
 import { getUserDetails } from "../firebase/firestoreFunctions";
 
+import { GiForkKnifeSpoon } from "react-icons/gi";
+import { IoPersonSharp } from "react-icons/io5";
+import { IoIosChatboxes } from "react-icons/io";
+import { FaHome } from 'react-icons/fa';
+import "./NavBar.css";
+
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const locations = [
@@ -42,26 +48,73 @@ const HomePage = () => {
   }, [userDetails]);
 
   return (
-    <div style={{ height: "100vh", width: "100vw" }}>
-      {userDetails ? (
-        <p>Welcome, {userDetails.name}!</p>
-      ) : (
-        <p>Loading user details...</p>
-      )}
+    <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
+      {/* Vertical Navbar */}
+      <div className="right-navbar">
+        <div className="nav-item" title="Home">
+          <FaHome/>
+        </div>
+        <div className="nav-item" title="Chat">
+          <IoIosChatboxes />
+        </div>
+        <div className="nav-item" title="Suggested Restaurants">
+          <GiForkKnifeSpoon />
+        </div>
+        <div className="nav-item" title="Profile">
+        <IoPersonSharp />
+        </div>
+      </div>
 
-      <APIProvider
-        apiKey={GOOGLE_MAPS_API_KEY}
-        onLoad={() => console.log("Maps API has loaded.")}
-      >
-        <Map
-          defaultZoom={13}
-          defaultCenter={{ lat: 40.6782, lng: -73.9442 }} // Brooklyn coordinates
-          mapId="a55e2de4b4bc2090"
-          onLoad={(map) => console.log("Map Loaded:", map)}
+      {/* Main Content */}
+      <div style={{ height: "110%", width: "100%" }}>
+        {userDetails ? (
+          <p
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              background: "rgba(255, 255, 255, 0.8)",
+              padding: "5px 10px",
+              borderRadius: "8px",
+              zIndex: 1000,
+            }}
+          >
+            Welcome, {userDetails.name}!
+          </p>
+        ) : (
+          <p
+            style={{
+              position: "absolute",
+              top: 10,
+              left: 10,
+              background: "rgba(255, 255, 255, 0.8)",
+              padding: "5px 10px",
+              borderRadius: "8px",
+              zIndex: 1000,
+            }}
+          >
+            Loading user details...
+          </p>
+        )}
+        <APIProvider
+          apiKey={GOOGLE_MAPS_API_KEY}
+          onLoad={() => console.log("Maps API has loaded.")}
         >
-          <PoiMarkers pois={locations} />
-        </Map>
-      </APIProvider>
+          <Map
+            defaultZoom={13}
+            defaultCenter={{ lat: 40.6782, lng: -73.9442 }} // Brooklyn coordinates
+            options={{
+              disableDefaultUI: true,
+              draggable: true,
+              scrollwheel: true,
+            }}
+            mapId="a55e2de4b4bc2090"
+            onLoad={(map) => console.log("Map Loaded:", map)}
+          >
+            <PoiMarkers pois={locations} />
+          </Map>
+        </APIProvider>
+      </div>
     </div>
   );
 };
