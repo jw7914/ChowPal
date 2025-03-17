@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import FirstLoginPage from "./pages/FirstLoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase/firebaseconfig";
 
@@ -25,7 +26,8 @@ function App() {
 
   return (
       <Routes>
-        <Route path="/" element={<LoginPage setUser={setUser} />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage setUser={setUser} />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/firstlogin" element={<FirstLoginPage />} />
         <Route path="/home" element={<HomePage user={user} />} />
