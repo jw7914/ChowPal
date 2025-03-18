@@ -1,0 +1,384 @@
+@import "tailwindcss";
+
+
+
+/* LandingPage.css - Updated version with original color scheme */
+
+/* Loading Overlay - Keep and enhance */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #fdc3c2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.loading-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-favicon {
+  width: 300px;
+  height: 300px;
+  margin-bottom: 20px;
+  animation: infinite;
+}
+
+.loading-logo.fade-in {
+  opacity: 1;
+  transform: scale(1);
+  transition: all 0.5s ease-in-out;
+}
+
+.loading-logo {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+/* Animation keyframes - Keep and enhance */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideFromRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideFromLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Sticky Navbar - Keep */
+.navbar {
+  transition: all 0.3s ease;
+}
+
+.navbar.scrolled {
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Responsive container - Keep */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Section animations - Keep and enhance */
+.feature-card, .testimonial-card, .step-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.hero-section .md\:w-1\/2:first-child {
+  animation: slideFromLeft 0.8s ease-out;
+}
+
+.hero-section .md\:w-1\/2:last-child {
+  animation: slideFromRight 0.8s ease-out;
+}
+
+/* Feature cards hover effect - Keep */
+.feature-card:hover .icon-wrapper {
+  transform: translateY(-5px);
+  transition: transform 0.3s ease;
+}
+
+.feature-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Testimonial card hover effect - Keep and enhance */
+.testimonial-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.testimonial-card img {
+  transition: transform 0.5s ease;
+}
+
+.testimonial-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Image effects - Keep */
+.hero-section img {
+  transition: transform 0.5s ease;
+}
+
+.hero-section:hover img {
+  transform: scale(1.02);
+}
+
+/* Button animations - Keep and enhance */
+button, .button, a.button {
+  transition: all 0.3s ease;
+}
+
+button:hover, .button:hover, a.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* App mockup effects - NEW */
+.app-preview-section .relative {
+  perspective: 1000px;
+}
+
+.app-preview-section .relative img:first-child {
+  transition: transform 0.5s ease;
+}
+
+.app-preview-section .relative:hover img:first-child {
+  transform: rotateY(-5deg) rotateX(5deg);
+}
+
+.app-preview-section .absolute {
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
+
+.app-preview-section .relative:hover .absolute {
+  transform: translateY(-8px) translateX(-5px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+/* Mobile app store buttons - NEW */
+.app-preview-section button {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-preview-section button:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,0.1);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.app-preview-section button:hover:after {
+  transform: translateX(0);
+}
+
+/* FAQ Accordion animations - Enhanced */
+.faq-section button {
+  transition: background-color 0.3s ease;
+}
+
+.faq-section button span:last-child {
+  transition: transform 0.3s ease;
+}
+
+.faq-section button[aria-expanded="true"] span:last-child {
+  transform: rotate(45deg);
+}
+
+.faq-section div[aria-hidden] {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.faq-section div[aria-hidden="false"] {
+  max-height: 200px;
+}
+
+/* Social icons styling - NEW */
+.social-links a {
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.social-links a:hover {
+  transform: translateY(-5px);
+}
+
+.social-links a:before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: currentColor;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.3s ease;
+  z-index: -1;
+  opacity: 0.2;
+}
+
+.social-links a:hover:before {
+  transform: scale(1.5);
+}
+
+/* Contact form styling - NEW */
+.contact-form input,
+.contact-form textarea {
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #fdc3c2; /* orange-500 */
+  background-color: rgba(255,255,255,0.1);
+  outline: none;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.contact-form input:focus::placeholder,
+.contact-form textarea:focus::placeholder {
+  opacity: 0.3;
+}
+
+/* Stats counter animation - NEW */
+.stats-section .text-4xl {
+  position: relative;
+  display: inline-block;
+}
+
+.stats-section .text-4xl.animated:after {
+  content: '';
+  position: absolute;
+  height: 3px;
+  width: 0;
+  background-color: white;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: width 1s ease;
+}
+
+.stats-section .text-4xl.animated.in-view:after {
+  width: 50%;
+}
+
+/* How it works section arrows - NEW */
+@media (min-width: 768px) {
+  .how-it-works-section .text-4xl {
+    position: relative;
+    animation: arrowPulse 2s infinite;
+  }
+}
+
+@keyframes arrowPulse {
+  0% { opacity: 0.5; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
+  100% { opacity: 0.5; transform: translateX(0); }
+}
+
+/* CTA section animation - NEW */
+.cta-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+  transform: scale(0.9);
+  opacity: 0;
+  transition: all 1s ease;
+}
+
+.cta-section.in-view:before {
+  transform: scale(1.5);
+  opacity: 1;
+}
+
+/* Mobile optimizations - Keep and enhance */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 4rem 0;
+  }
+  
+  .stats-section .text-4xl {
+    font-size: 1.5rem;
+  }
+  
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .app-preview-section .relative:hover img:first-child {
+    transform: none;
+  }
+  
+  .app-preview-section .relative:hover .absolute {
+    transform: none;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  }
+  
+  .how-it-works-section .step-card {
+    position: relative;
+  }
+  
+  .how-it-works-section .step-card:not(:last-child):after {
+    content: '↓';
+    display: block;
+    text-align: center;
+    font-size: 2rem;
+    color: #fdc3c2;
+    margin: 1rem 0;
+  }
+}
+
+/* Add JavaScript hook for scroll-based animations */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.scroll-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
