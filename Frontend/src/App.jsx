@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import LoginPage from "./pages/UserLoginPage";
+import UserLoginPage from "./pages/UserLoginPage";
 import FirstLoginPage from "./pages/FirstLoginPage";
-import RegisterPage from "./pages/UserRegisterPage";
+import UserRegisterPage from "./pages/UserRegisterPage";
 import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RestaurantRegisterPage from "./pages/RestaurantRegisterPage";
@@ -30,8 +30,8 @@ function App() {
       <Route path="/restaurant-login" element={<RestaurantLoginPage />} />
       <Route path="/restaurant-register" element={<RestaurantRegisterPage />} />
       <Route path="/firstlogin" element={<FirstLoginPage />} />
-      <Route path="/user-login" element={<LoginPage />} />
-      <Route path="/user-register" element={<RegisterPage />} />
+      <Route path="/user-login" element={<UserLoginPage />} />
+      <Route path="/user-register" element={<UserRegisterPage />} />
       {/* Temp logout route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="*" element={<NotFoundPage />} /> {/* Catch-all route */}

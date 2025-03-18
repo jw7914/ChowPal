@@ -1,0 +1,69 @@
+/* UserLoginPage.module.css */
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: 'Pacifico', cursive;
+}
+
+.backgroundVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.overlayContainer {
+  position: relative;
+  height: 100%;
+}
+
+.darkOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+.loginContainer {
+  margin-top: 8vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: #ffc595;
+  color: #3e4a56;
+}
+
+.logo {
+  width: 160px;
+  height: 160px;
+  margin: -2rem;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #26313b;
+}
+
+.signInButton {
+  background-color: #fff;
+  color: #333;
+}
+
+input {
+  border-color: #fff;
+  color: #3e4a56;
+}
+
+input::placeholder {
+  color: #3e4a56;
+}

@@ -16,7 +16,7 @@ import {
   Link,
   Modal,
 } from "@mui/material";
-import "./UserLoginPage.css";
+import styles from "./UserLoginPage.module.css";
 
 const errorMessages = {
   "auth/email-already-in-use":
@@ -27,7 +27,7 @@ const errorMessages = {
   "auth/internal-error": "An internal error occurred. Try again later.",
 };
 
-const RegisterPage = () => {
+const UserRegisterPage = () => {
   const videoRef = useRef(null);
   const auth = getAuth();
   const navigate = useNavigate();
@@ -86,20 +86,20 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="overlay-container">
-      <video ref={videoRef} autoPlay loop muted className="background-video">
+    <div className={styles.overlayContainer}>
+      <video ref={videoRef} autoPlay loop muted className={styles.backgroundVideo}>
         <source src="src/assets/login_bg.mp4" type="video/mp4" />
       </video>
-      <div className="dark-overlay"></div>
+      <div className={styles.darkOverlay}></div>
 
-      <Container component="main" maxWidth="xs" className="login-container">
-        <Box className="login-container">
+      <Container component="main" maxWidth="xs" className={styles.loginContainer}>
+        <Box className={styles.loginContainer}>
           <img
             src="src/assets/chowpal_logo.png"
             alt="ChowPal Logo"
-            className="logo"
+            className={styles.logo}
           />
-          <div className="title">Chowpal</div>
+          <div className={styles.title}>Chowpal</div>
           <Box
             component="form"
             onSubmit={handleSubmit}
@@ -152,7 +152,7 @@ const RegisterPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              className="SignInButton"
+              className={styles.signInButton}
               sx={{ mt: 3, mb: 2 }}
             >
               Sign Up
@@ -208,4 +208,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default UserRegisterPage;

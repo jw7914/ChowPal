@@ -17,14 +17,14 @@ import {
   Divider,
   Alert,
 } from "@mui/material";
-import "./UserLoginPage.css";
 import GoogleIcon from "@mui/icons-material/Google";
 import { handleFirstLogin } from "../firebase/firestoreFunctions";
+import styles from "./UserLoginPage.module.css"; 
 
 const auth = getAuth(firebaseapp);
 const provider = new GoogleAuthProvider();
 
-const LoginPage = () => {
+const UserLoginPage = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState("");
@@ -66,23 +66,33 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="overlay-container">
-      <video ref={videoRef} autoPlay loop muted className="background-video">
+    <div className={styles.overlayContainer}>
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        className={styles.backgroundVideo}
+      >
         <source src="src/assets/login_bg.mp4" type="video/mp4" />
       </video>
-      <div className="dark-overlay"></div>
-      <Container component="main" maxWidth="xs" className="login-container">
-        <Box className="login-container">
+      <div className={styles.darkOverlay}></div>
+      <Container
+        component="main"
+        maxWidth="xs"
+        className={styles.loginContainer}
+      >
+        <Box className={styles.loginContainer}>
           <img
             src="src/assets/chowpal_logo.png"
             alt="ChowPal Logo"
-            className="logo"
+            className={styles.logo}
           />
-          <div className="title">Chowpal</div>
+          <div className={styles.title}>Chowpal</div>
           <Button
             fullWidth
             variant="outlined"
-            className="GoogleSignInButton"
+            className={styles.googleSignInButton}
             onClick={handleGoogleLogin}
             sx={{ mt: 2, color: "black", borderColor: "black" }}
             startIcon={<GoogleIcon />}
@@ -124,7 +134,7 @@ const LoginPage = () => {
               type="submit"
               fullWidth
               variant="contained"
-              className="SignInButton"
+              className={styles.signInButton}
               sx={{ mt: 3, mb: 2 }}
             >
               Sign In
@@ -135,7 +145,7 @@ const LoginPage = () => {
             <Link
               href="/user-register"
               underline="none"
-              className="custom-link"
+              className={styles.customLink}
             >
               Sign up here
             </Link>
@@ -151,4 +161,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default UserLoginPage;
