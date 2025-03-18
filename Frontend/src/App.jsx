@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RestaurantRegisterPage from "./pages/RestaurantRegisterPage";
 import RestaurantLoginPage from "./pages/RestaurantLoginPage";
+import LandingPage from "./pages/LandingPage";
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/landing-page" element={<LandingPage />} />
       <Route path="/restaurant-login" element={<RestaurantLoginPage />} />
       <Route path="/restaurant-register" element={<RestaurantRegisterPage />} />
       <Route path="/firstlogin" element={<FirstLoginPage />} />
