@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Box, TextField, Button, CircularProgress } from "@mui/material";
+import { Box, TextField, Button } from "@mui/material";
 import { getAuth } from "firebase/auth";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import "./FirstLoginPage.css";
 import { handleInsertUser } from "../firebase/firestoreFunctions";
 
@@ -12,10 +12,7 @@ const storage = getStorage();
 const FirstLoginPage = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploading, setUploading] = useState(false);
-  const [photoURL, setPhotoURL] = useState(null);
+  const [photos, setPhotos] = useState([]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -24,103 +21,140 @@ const FirstLoginPage = () => {
   }, []);
 
   const handleFileChange = (event) => {
-    if (event.target.files[0]) {
-      setSelectedFile(event.target.files[0]);
+    const selectedFiles = Array.from(event.target.files);
+
+    // Combine existing photos with newly selected ones
+    const totalPhotos = [...photos, ...selectedFiles];
+
+    // Ensure the total doesn't exceed 3
+    if (totalPhotos.length > 3) {
+      alert("You can only upload up to 3 photos.");
+    } else {
+      setPhotos(totalPhotos);
     }
   };
 
-  const handlePhotoUpload = () => {
-    if (!selectedFile) return;
-
-    setUploading(true);
-    const storageRef = ref(storage, `users/${auth.currentUser.uid}/profile_photos/profile_pic.${selectedFile.name.split('.').pop()}`);
-    const uploadTask = uploadBytesResumable(storageRef, selectedFile);
-
-    uploadTask.on(
-      "state_changed",
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error("Upload Error:", error);
-        setUploading(false);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setPhotoURL(downloadURL);
-          setUploading(false);
-        });
-      }
-    );
+  const uploadPhotos = async (files) => {
+    const photoURLs = [];
+    for (let i = 0; i < files.length; i++) {
+      const photoRef = ref(storage, `users/${auth.currentUser.uid}/photo-${i + 1}`);
+      await uploadBytes(photoRef, files[i]);
+      const downloadURL = await getDownloadURL(photoRef);
+      photoURLs.push(downloadURL);
+    }
+    return photoURLs;
   };
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    const idToken = await auth.currentUser.getIdToken();
-    const data = {
-      idToken: idToken,
-      name: event.target.name.value,
-      favoriteCuisine: event.target.favoriteCuisine.value,
-      location: event.target.location.value,
-      email: auth.currentUser.email,
-      accountType: "user",
-      photoURL: photoURL,
-    };
+
+    if (photos.length !== 3) {
+      alert("Number of photos invalid");
+      return;
+    }
+
     try {
+      const photoURLs = await uploadPhotos(photos);
+      const idToken = await auth.currentUser.getIdToken();
+      const data = {
+        idToken,
+        name: event.target.name.value,
+        favoriteCuisine: event.target.favoriteCuisine.value,
+        location: event.target.location.value,
+        email: auth.currentUser.email,
+        accountType: "user",
+        photos: photoURLs,
+      };
       const success = await handleInsertUser(data);
-      if (success) {
-        navigate("/");
-      }
+      if (success) navigate("/");
     } catch (err) {
-      console.error(err);
+      console.error("Error during submission:", err);
     }
   };
 
   return (
     <div className="overlay-container">
-      {/* ... video and overlay */}
+      <video ref={videoRef} autoPlay loop muted className="background-video">
+        <source src="src/assets/login_bg.mp4" type="video/mp4" />
+      </video>
+      <div className="dark-overlay"></div>
       <div className="center-container">
         <Box className="first-login-container">
           <h1 className="title">Nice to meet you!</h1>
           <div className="bottom-section">
             <div className="left-section">
-              <Box className="dotted-container">
-                {selectedFile && (
-                  <img
-                    src={URL.createObjectURL(selectedFile)}
-                    alt="Selected Profile"
-                    style={{ maxWidth: "150px", maxHeight: "150px" }}
-                  />
-                )}
+              <Box className="photo-preview-container">
+                {photos.map((photo, index) => (
+                  <div key={index} className="photo-wrapper">
+                    <img
+                      src={URL.createObjectURL(photo)}
+                      alt={`Preview ${index + 1}`}
+                      className="photo-preview"
+                    />
+                    <button
+                      className="remove-photo-button"
+                      onClick={() => {
+                        const updatedPhotos = photos.filter((_, i) => i !== index);
+                        setPhotos(updatedPhotos);
+                      }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
               </Box>
               <input
-                accept="image/*"
-                style={{ display: "none" }}
-                id="raised-button-file"
                 type="file"
+                id="photo-upload"
+                accept="image/*"
                 onChange={handleFileChange}
+                style={{ marginTop: "1rem" }}
               />
-              <label htmlFor="raised-button-file">
-                <Button variant="outlined" component="span" sx={{ marginTop: "1rem" }}>
-                  Upload Photo
-                </Button>
-              </label>
-              {uploading && (
-                <Box sx={{ display: 'flex', alignItems: 'center', marginTop: "1rem" }}>
-                  <CircularProgress variant="determinate" value={uploadProgress} />
-                  <Box sx={{ ml: 2, minWidth: 35 }}>
-                    {`${Math.round(uploadProgress)}%`}
-                  </Box>
-                </Box>
-              )}
-              {selectedFile && !uploading && (
-                <Button variant="contained" onClick={handlePhotoUpload} sx={{ marginTop: "1rem" }}>
-                  Upload
-                </Button>
-              )}
             </div>
-            {/* ... right-section form */}
+            <div className="right-section">
+              <form onSubmit={handleFormSubmit}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="name"
+                  label="My name is"
+                  name="name"
+                  autoComplete="name"
+                  autoFocus
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="favoriteCuisine"
+                  label="My favorite cuisine is"
+                  name="favoriteCuisine"
+                  autoComplete="favoriteCuisine"
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="location"
+                  label="I am from"
+                  name="location"
+                  autoComplete="location"
+                />
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{
+                    position: "absolute",
+                    bottom: "2rem",
+                    right: "14rem",
+                    width: "200px",
+                  }}
+                >
+                  {"That's me ->"}
+                </Button>
+              </form>
+            </div>
           </div>
         </Box>
       </div>

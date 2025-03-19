@@ -104,3 +104,56 @@ body, html {
     display: none;
   }
   
+  .photo-preview-container img {
+    width: 100px; /* Set desired width */
+    height: 100px; /* Set desired height */
+    margin: 0.5rem; /* Add spacing between images */
+    border-radius: 8px; /* Optional: Rounded corners */
+    object-fit: cover; /* Ensures the image fits the box */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: Styling */
+  }
+
+  .photo-preview-container {
+    display: flex;
+    gap: 0.5rem; /* Adds spacing between photos */
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  .photo-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+  }
+  
+  .photo-preview {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .remove-photo-button {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .remove-photo-button:hover {
+    background-color: darkred;
+  }
+  
