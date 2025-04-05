@@ -34,10 +34,14 @@ const FirstLoginPage = () => {
     }
   };
 
+  // FIREBASE SOTRAGE
   const uploadPhotos = async (files) => {
     const photoURLs = [];
     for (let i = 0; i < files.length; i++) {
-      const photoRef = ref(storage, `users/${auth.currentUser.uid}/photo-${i + 1}`);
+      const photoRef = ref(
+        storage,
+        `users/${auth.currentUser.uid}/photo-${i + 1}`
+      );
       await uploadBytes(photoRef, files[i]);
       const downloadURL = await getDownloadURL(photoRef);
       photoURLs.push(downloadURL);
@@ -94,7 +98,9 @@ const FirstLoginPage = () => {
                     <button
                       className="remove-photo-button"
                       onClick={() => {
-                        const updatedPhotos = photos.filter((_, i) => i !== index);
+                        const updatedPhotos = photos.filter(
+                          (_, i) => i !== index
+                        );
                         setPhotos(updatedPhotos);
                       }}
                     >

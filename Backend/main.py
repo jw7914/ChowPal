@@ -1,6 +1,5 @@
 from typing import Union
 from firebase_admin import credentials, auth, firestore
-import firebase_admin
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -25,7 +24,7 @@ firebase_config = {
     "universe_domain": os.getenv("FIREBASE_UNIVERSE_DOMAIN")
 }
 creds = credentials.Certificate(firebase_config)
-firebase_admin.initialize_app(creds)
+firebase_admin.initialize_app(creds, {'storageBucket': os.getenv("FIREBASE_BUCKET")})
 
 
 

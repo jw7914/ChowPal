@@ -25,8 +25,8 @@ const Logout = () => {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/landing-page" element={<LandingPage />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/home" element={<HomePage />} />
       <Route path="/restaurant-login" element={<RestaurantLoginPage />} />
       <Route path="/restaurant-register" element={<RestaurantRegisterPage />} />
       <Route path="/firstlogin" element={<FirstLoginPage />} />
