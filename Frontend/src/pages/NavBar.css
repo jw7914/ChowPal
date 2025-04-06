@@ -1,7 +1,7 @@
 /* Vertical Navbar Container */
 .right-navbar {
   position: absolute;
-  right: 0;
+  left: 0;
   top: 0;
   height: 100%;
   width: 60px;
@@ -42,4 +42,3 @@
 .nav-item:hover .nav-icon {
   fill: gray; /* Icon hover fill effect */
 }
-

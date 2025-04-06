@@ -23,10 +23,8 @@ const FirstLoginPage = () => {
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
 
-    // Combine existing photos with newly selected ones
     const totalPhotos = [...photos, ...selectedFiles];
 
-    // Ensure the total doesn't exceed 3
     if (totalPhotos.length > 3) {
       alert("You can only upload up to 3 photos.");
     } else {
@@ -34,44 +32,36 @@ const FirstLoginPage = () => {
     }
   };
 
-  const uploadPhotos = async (files) => {
-    const photoURLs = [];
-    for (let i = 0; i < files.length; i++) {
-      const photoRef = ref(storage, `users/${auth.currentUser.uid}/photo-${i + 1}`);
-      await uploadBytes(photoRef, files[i]);
-      const downloadURL = await getDownloadURL(photoRef);
-      photoURLs.push(downloadURL);
-    }
-    return photoURLs;
-  };
-
   const handleFormSubmit = async (event) => {
     event.preventDefault();
 
     if (photos.length !== 3) {
-      alert("Number of photos invalid");
+      alert("Please upload exactly 3 photos.");
       return;
     }
 
     try {
-      const photoURLs = await uploadPhotos(photos);
       const idToken = await auth.currentUser.getIdToken();
-      const data = {
-        idToken,
-        name: event.target.name.value,
-        favoriteCuisine: event.target.favoriteCuisine.value,
-        location: event.target.location.value,
-        email: auth.currentUser.email,
-        accountType: "user",
-        photos: photoURLs,
-      };
-      const success = await handleInsertUser(data);
-      if (success) navigate("/");
+      const formData = new FormData();
+      formData.append("idToken", idToken);
+      formData.append("name", event.target.name.value);
+      formData.append("favoriteCuisine", event.target.favoriteCuisine.value);
+      formData.append("location", event.target.location.value);
+      formData.append("email", auth.currentUser.email);
+      formData.append("accountType", "user");
+
+      photos.forEach((photo) => {
+        formData.append("photos", photo);
+      });
+
+      const result = await handleInsertUser(formData);
+
+      navigate("/home");
     } catch (err) {
-      console.error("Error during submission:", err);
+      console.error("Unexpected error during submission:", err);
+      alert("Something went wrong.");
     }
   };
-
   return (
     <div className="overlay-container">
       <video ref={videoRef} autoPlay loop muted className="background-video">
@@ -94,7 +84,9 @@ const FirstLoginPage = () => {
                     <button
                       className="remove-photo-button"
                       onClick={() => {
-                        const updatedPhotos = photos.filter((_, i) => i !== index);
+                        const updatedPhotos = photos.filter(
+                          (_, i) => i !== index
+                        );
                         setPhotos(updatedPhotos);
                       }}
                     >
@@ -103,14 +95,40 @@ const FirstLoginPage = () => {
                   </div>
                 ))}
               </Box>
-              <input
-                type="file"
-                id="photo-upload"
-                accept="image/*"
-                onChange={handleFileChange}
-                style={{ marginTop: "1rem" }}
-              />
+
+              {/* Enhanced Upload Button */}
+              <Button
+                variant="contained"
+                component="label"
+                sx={{
+                  mt: 4,
+                  display: "inline-block",
+                  cursor: "pointer",
+                  backgroundColor: "#2563eb", // Tailwind blue-600
+                  color: "#ffffff",
+                  fontWeight: "600",
+                  py: "0.5rem",
+                  px: "1rem",
+                  borderRadius: "0.5rem",
+                  boxShadow: 2,
+                  textTransform: "none", // optional, removes ALL CAPS
+                  transition: "background-color 0.3s ease",
+                  "&:hover": {
+                    backgroundColor: "#1d4ed8", // Tailwind blue-700
+                  },
+                }}
+              >
+                Upload Photo
+                <input
+                  type="file"
+                  id="photo-upload"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  hidden
+                />
+              </Button>
             </div>
+
             <div className="right-section">
               <form onSubmit={handleFormSubmit}>
                 <TextField

@@ -11,7 +11,7 @@ import { getUserDetails } from "../firebase/firestoreFunctions";
 import { GiForkKnifeSpoon } from "react-icons/gi";
 import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
-import { FaHome } from 'react-icons/fa';
+import { FaHome } from "react-icons/fa";
 import "./NavBar.css";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -48,11 +48,18 @@ const HomePage = () => {
   }, [userDetails]);
 
   return (
-    <div style={{ height: "100vh", width: "100vw", position: "relative" }}>
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+        position: "absolute",
+        overflow: "hidden",
+      }}
+    >
       {/* Vertical Navbar */}
       <div className="right-navbar">
         <div className="nav-item" title="Home">
-          <FaHome/>
+          <FaHome />
         </div>
         <div className="nav-item" title="Chat">
           <IoIosChatboxes />
@@ -61,7 +68,7 @@ const HomePage = () => {
           <GiForkKnifeSpoon />
         </div>
         <div className="nav-item" title="Profile">
-        <IoPersonSharp />
+          <IoPersonSharp />
         </div>
       </div>
 
@@ -72,7 +79,7 @@ const HomePage = () => {
             style={{
               position: "absolute",
               top: 10,
-              left: 10,
+              left: 100,
               background: "rgba(255, 255, 255, 0.8)",
               padding: "5px 10px",
               borderRadius: "8px",
@@ -101,6 +108,7 @@ const HomePage = () => {
           onLoad={() => console.log("Maps API has loaded.")}
         >
           <Map
+            style={{ maxHeight: "100vh" }}
             defaultZoom={13}
             defaultCenter={{ lat: 40.6782, lng: -73.9442 }} // Brooklyn coordinates
             options={{

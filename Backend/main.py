@@ -1,15 +1,16 @@
-from typing import Union
-from firebase_admin import credentials, auth, firestore
-import firebase_admin
+from typing import Union, List
+from firebase_admin import credentials, auth, firestore, storage
 import os
+from uuid import uuid4
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form, Request
 import firebase_admin.auth
 import requests, json
 from fastapi.middleware.cors import CORSMiddleware
 import time
 load_dotenv()
 app = FastAPI()
+
 
 
 firebase_config = {
@@ -26,7 +27,7 @@ firebase_config = {
     "universe_domain": os.getenv("FIREBASE_UNIVERSE_DOMAIN")
 }
 creds = credentials.Certificate(firebase_config)
-firebase_admin.initialize_app(creds)
+firebase_admin.initialize_app(creds, {'storageBucket': os.getenv("FIREBASE_BUCKET")})
 
 
 
@@ -59,25 +60,11 @@ def get_user(idToken):
     except Exception:
         return None
 
-# @app.get("/firebase")
-# def authenticate_user(email: str = Query(..., description="User email to authenticate")):
-#     """
-#     Authenticate a user by email using Firebase Authentication.
-#     """
-#     try:
-#         user = auth.get_user_by_email(email)
-#         return {"message": "User found", "uid": user.uid, "email": user.email}
-#     except auth.UserNotFoundError:
-#         raise HTTPException(status_code=404, detail="User not found")
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error finding user: {e}")
-
-
 
 # that uid only exists in auth db, that can only be used for auth 
 # if we want like other things associated with them we need to use firestore db
 @app.get("/users")
-def login_check(idToken: str = Query(...)):
+def find_user(idToken: str = Query(...)):
     if not idToken:
         raise HTTPException(status_code=400, detail="Missing ID token")
     
@@ -95,7 +82,6 @@ def login_check(idToken: str = Query(...)):
     # Return the user document data
     return user_doc.to_dict()
 
-    
 @app.get("/users/login-check")
 def login_check(idToken: str = Query(...)):  # Using Query to retrieve idToken from the query string
     if not idToken:
@@ -118,41 +104,50 @@ def login_check(idToken: str = Query(...)):  # Using Query to retrieve idToken f
     return {"redirect": "/firstlogin" if first_login else "/"}
 
 @app.post("/users/insert")
-async def insert_user(request: Request):
-    # Get the data from the request body as a dictionary
-    data = await request.json()
+async def insert_user(
+    idToken: str = Form(...),
+    name: str = Form(...),
+    favoriteCuisine: str = Form(...),
+    location: str = Form(...),
+    email: str = Form(...),
+    accountType: str = Form(...),
+    photos: List[UploadFile] = File(...)
+):
 
-    # Extract idToken from the data
-    id_token = data.get("idToken")
-    if not id_token:
-        raise HTTPException(status_code=400, detail="Missing ID token")
-
-    # Validate the user token and get the user ID
-    uid = get_user(id_token)
+    uid = get_user(idToken)
     if not uid:
-        raise HTTPException(status_code=401, detail="Invalid user token")
+        raise HTTPException(status_code=401, detail="Invalid ID token")
 
-    # Reference to the Firestore user document
+    bucket = storage.bucket()
+    photo_urls = []
+
+    for index, photo in enumerate(photos):
+        extension = photo.filename.split(".")[-1]
+        filename = f"users/{uid}/photo-{index + 1}-{uuid4().hex}.{extension}"
+        blob = bucket.blob(filename)
+        blob.upload_from_file(photo.file, content_type=photo.content_type)
+        blob.make_public()
+        photo_urls.append(blob.public_url)
+
+    # 3. Save user info in Firestore
     user_ref = db.collection("users").document(uid)
     user_doc = user_ref.get()
-
     if not user_doc.exists:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    accountType = data.get("accountType")
-    if (accountType == "user"):
+
+    if accountType == "user":
         user_ref.update({
             "firstLogin": False,
-            "name": data.get("name"),  
-            "email": data.get("email"), 
-            "favoriteCuisine": data.get("favoriteCuisine"),
-            "location": data.get("location"),
+            "name": name,
+            "email": email,
+            "favoriteCuisine": favoriteCuisine,
+            "location": location,
             "accountType": accountType,
-            "user_content": []
+            "photos": photo_urls,
         })
-    elif (accountType == "restaurant"):
+    elif accountType == "restaurant":
         user_ref.update({
-            "email": data.get("email"), 
+            "email": email,
             "accountType": accountType
         })
 

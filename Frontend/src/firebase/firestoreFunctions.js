@@ -11,9 +11,13 @@ export async function handleFirstLogin(idToken) {
   }
 }
 
-export async function handleInsertUser(data) {
+export async function handleInsertUser(formData) {
   try {
-    const response = await app.post(`/users/insert`, data);
+    const response = await app.post(`/users/insert`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (err) {
     return err;
