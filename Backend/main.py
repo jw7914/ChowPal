@@ -306,6 +306,29 @@ def get_place_details(place_id):
 
 #print(search_places_nearby("40.65010000,-73.949580000","200"))
 
+def get_place(place_id):
+    """
+    Get place details from Firestore.
+
+    Args:
+        place_id (str): The unique identifier for the place.
+
+    Returns:
+        dict: A dictionary containing the details of the place.
+    """
+    # Reference to the Firestore places collection
+    places_ref = db.collection("places").document(place_id)
+    
+    # Get the document
+    doc = places_ref.get()
+
+    # Check if the document exists
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    # Return the document data
+    return doc.to_dict()
+
 def make_review(place_id, user_id, review_text, rating):
     """
     Create a review for a place.
@@ -356,71 +379,94 @@ def get_reviews(place_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving reviews: {e}")
 
-def add_user_to_queue(user_id, place_id):
+def add_user_to_queue(place_id, user_id):
     """
-    Add a user to the queue for a place.
+    Adds a user to the queue of the specified restaurant.
 
     Args:
-        user_id (str): The unique identifier for the user.
-        place_id (str): The unique identifier for the place.
+        place_id (str): The place_id of the restaurant.
+        user_id (str): The UID of the user to add to the queue.
 
     Returns:
-        dict: A dictionary containing the details of the added user.
+        dict: Result message and current queue.
     """
-    # Reference to the Firestore queue collection
-    queue_ref = db.collection("places").document(place_id).collection("queue")
-
-    # Create a new queue document
-    queue_data = {
-        "user_id": user_id,
-        "timestamp": firestore.SERVER_TIMESTAMP
-    }
-    
     try:
-        queue_ref.document(f"queue_{user_id}").set(queue_data)
-        return {"message": "User added to queue successfully", "queue_data": queue_data}
+        place_ref = db.collection("places").document(place_id)
+        doc = place_ref.get()
+
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+
+        place_data = doc.to_dict()
+        queue = place_data.get("queue", [])
+
+        if user_id in queue:
+            return {"message": "User is already in the queue", "queue": queue}
+
+        queue.append(user_id)
+        place_ref.update({"queue": queue})
+
+        return {"message": "User added to queue", "queue": queue}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error adding user to queue: {e}")
 
-def get_queue(place_id):
+def remove_user_from_queue(place_id, user_id):
     """
-    Get the queue for a place.
+    Removes a user from the queue of the specified restaurant.
 
     Args:
-        place_id (str): The unique identifier for the place.
+        place_id (str): The place_id of the restaurant.
+        user_id (str): The UID of the user to remove from the queue.
 
     Returns:
-        list: A list of users in the queue for the place.
+        dict: Result message and current queue.
     """
-    # Reference to the Firestore queue collection
-    queue_ref = db.collection("places").document(place_id).collection("queue")
-    
     try:
-        queue = queue_ref.stream()
-        queue_list = [user.to_dict() for user in queue]
-        return {"message": "Queue retrieved successfully", "queue": queue_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving queue: {e}")
+        place_ref = db.collection("places").document(place_id)
+        doc = place_ref.get()
 
-def remove_user_from_queue(user_id, place_id):
-    """
-    Remove a user from the queue for a place.
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    Args:
-        user_id (str): The unique identifier for the user.
-        place_id (str): The unique identifier for the place.
+        place_data = doc.to_dict()
+        queue = place_data.get("queue", [])
 
-    Returns:
-        dict: A dictionary containing the details of the removed user.
-    """
-    # Reference to the Firestore queue collection
-    queue_ref = db.collection("places").document(place_id).collection("queue")
+        if user_id not in queue:
+            return {"message": "User is not in the queue", "queue": queue}
 
-    try:
-        queue_ref.document(f"queue_{user_id}").delete()
-        return {"message": "User removed from queue successfully"}
+        queue.remove(user_id)
+        place_ref.update({"queue": queue})
+
+        return {"message": "User removed from queue", "queue": queue}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error removing user from queue: {e}")
+
+def get_queue(place_id):
+    """
+    Retrieves the queue of the specified restaurant.
+
+    Args:
+        place_id (str): The place_id of the restaurant.
+
+    Returns:
+        dict: Result message and current queue.
+    """
+    try:
+        place_ref = db.collection("places").document(place_id)
+        doc = place_ref.get()
+
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+
+        place_data = doc.to_dict()
+        queue = place_data.get("queue", [])
+
+        return {"message": "Queue retrieved successfully", "queue": queue}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving queue: {e}")
 
 
 def load_nearby(location: str, radius: str):
@@ -436,12 +482,13 @@ def load_nearby(location: str, radius: str):
 
             # Check if the place already exists in Firestore
             place_ref = db.collection("places").document(rest_id)
-            place_doc = place_ref.get()
-            if not place_doc.exists:
+            if not place_ref.get().exists or "location" not in place_ref.get().to_dict():
                 # If the place doesn't exist, add it to Firestore
                 place_ref.set({
                     "name": place.get("name"),
-                    "address": place.get("vicinity")
+                    "address": place.get("vicinity"),
+                    "location": place.get("geometry", {}).get("location"),
+                    "queue": [],
                 })
         return {"message": "Nearby restaurants loaded successfully", "count": len(results)}
     except Exception as e:
@@ -449,3 +496,71 @@ def load_nearby(location: str, radius: str):
     return {"message": "No nearby places found"}
 
 #print(load_nearby("40.65010000,-73.949580000","500"))
+
+@app.get("/places/search-text")
+def api_search_text_places(query: str, specifications: Union[str, None] = None):
+    """
+    Search for places using text query and optional specifications.
+    `specifications` should be passed as a stringified JSON list of tuples.
+    Example: '[["maxprice", "2", "value"], ["opennow", "", "None"]]'
+    """
+    try:
+        specs = json.loads(specifications) if specifications else []
+        results = search_places_text(query, specs)
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {e}")
+
+@app.get("/places/{place_id}")
+def api_get_place(place_id: str):
+    """
+    Retrieve a place from Firestore.
+    """
+    return get_place(place_id)
+
+@app.post("/places/{place_id}/reviews/add")
+def api_add_review(
+    place_id: str,
+    user_id: str = Form(...),
+    review_text: str = Form(...),
+    rating: int = Form(...)
+):
+    return make_review(place_id, user_id, review_text, rating)
+
+@app.get("/places/{place_id}/reviews")
+def api_get_reviews(place_id: str):
+    return get_reviews(place_id)
+
+@app.post("/places/{place_id}/queue/add")
+def api_add_user_to_queue(place_id: str, user_id: str = Form(...)):
+    return add_user_to_queue(place_id, user_id)
+
+@app.post("/places/{place_id}/queue/remove")
+def api_remove_user_from_queue(place_id: str, user_id: str = Form(...)):
+    return remove_user_from_queue(place_id, user_id)
+
+@app.get("/places/{place_id}/queue")
+def api_get_queue(place_id: str):
+    return get_queue(place_id)
+
+@app.get("/restaurants/locations")
+def get_restaurant_locations():
+    try:
+        places_ref = db.collection("places")
+        docs = places_ref.stream()
+
+        locations = []
+        for doc in docs:
+            data = doc.to_dict()
+            loc = data.get("location")
+            name = data.get("name")
+            if loc and name:
+                locations.append({
+                    "key": doc.id,
+                    "name": name,
+                    "location": {"lat": loc.get("lat"), "lng": loc.get("lng")}
+                })
+
+        return {"locations": locations}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch locations: {e}")

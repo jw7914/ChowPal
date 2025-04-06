@@ -16,14 +16,10 @@ import "./NavBar.css";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-const locations = [
-  { key: "burgerking", location: { lat: 40.6505596, lng: -73.9498141 } },
-  { key: "dunkin", location: { lat: 40.6504014, lng: -73.9492629 } },
-];
-
 const HomePage = () => {
   const { user, isLoggedIn } = getFirebaseUser();
   const [userDetails, setUserDetails] = useState(null);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -38,6 +34,19 @@ const HomePage = () => {
     };
     fetchUserName();
   }, [user]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/restaurants/locations");
+        const data = await res.json();
+        setLocations(data.locations);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     if (userDetails) {
@@ -131,7 +140,7 @@ const PoiMarkers = ({ pois }) => {
   return (
     <>
       {pois.map((poi) => (
-        <AdvancedMarker key={poi.key} position={poi.location}>
+         <AdvancedMarker key={poi.key} position={poi.location} title={poi.name}>
           <Pin background="#FBBC04" glyphColor="#000" borderColor="#000" />
         </AdvancedMarker>
       ))}
