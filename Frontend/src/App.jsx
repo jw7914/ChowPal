@@ -7,6 +7,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import RestaurantRegisterPage from "./pages/RestaurantRegisterPage";
 import RestaurantLoginPage from "./pages/RestaurantLoginPage";
 import LandingPage from "./pages/LandingPage";
+import TestImage from "./pages/testImage";
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -32,8 +33,9 @@ function App() {
       <Route path="/firstlogin" element={<FirstLoginPage />} />
       <Route path="/user-login" element={<UserLoginPage />} />
       <Route path="/user-register" element={<UserRegisterPage />} />
-      {/* Temp logout route for functionality */}
+      {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
+      <Route path="/test-image" element={<TestImage />} />
       <Route path="*" element={<NotFoundPage />} /> {/* Catch-all route */}
     </Routes>
   );
