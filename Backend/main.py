@@ -284,7 +284,7 @@ def search_places_nearby(location, radius, max_pages=3):
 
     return all_results
 
-def get_place_details(place_id):
+def get_place_details(place_id, fields=None):
     """
     Get details of a place using the Google Places Details API.
 
@@ -295,7 +295,8 @@ def get_place_details(place_id):
         dict: A dictionary containing the details of the place.
     """
     url = "https://places.googleapis.com/v1/places/"
-    fields= "name,formatted_address,geometry/location,rating,opening_hours/periods/open/close,photos,website,reviews"
+    if not fields:
+        fields= "name,formatted_address,geometry/location,rating,opening_hours/periods/open/close,photos,website,reviews"
 
     # Make the API request
     r = requests.get(url + place_id + '&key=' + "?fields"+fields+PLACES_API_KEY)
@@ -303,6 +304,29 @@ def get_place_details(place_id):
 
     # Return the results from the API response
     return x['result']
+
+def get_place_photos(photo_reference):
+    """
+    Get photos of a place using the Google Places Photo API.
+
+    Args:
+        photo_reference (str): The unique identifier for the photo.
+
+    Returns:
+        str: The URL of the photo.
+    """
+    url = "https://maps.googleapis.com/maps/api/place/photo?"
+    params = {
+        "photoreference": photo_reference,
+        "key": PLACES_API_KEY,
+        "maxwidth": 400
+    }
+    
+    # Make the API request
+    r = requests.get(url, params=params)
+    
+    # Return the photo URL
+    return r.url
 
 #print(search_places_nearby("40.65010000,-73.949580000","200"))
 
@@ -544,7 +568,7 @@ def load_nearby(location: str, radius: str):
         raise HTTPException(status_code=500, detail=f"Error loading nearby places: {e}")
     return {"message": "No nearby places found"}
 
-print(load_nearby("40.69276682486575, -73.98560503927554","500"))
+#print(load_nearby("40.69276682486575, -73.98560503927554","500"))
 
 @app.get("/places/search-text")
 def api_search_text_places(query: str, specifications: Union[str, None] = None):
@@ -613,3 +637,45 @@ def get_restaurant_locations():
         return {"locations": locations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch locations: {e}")
+
+@app.get("/places/{place_id}/photos")
+def api_get_place_photos(place_id: str):
+    """
+    Retrieve photos for a place.
+    """
+    try:
+        place_details = get_place_details(place_id)
+        photos = place_details.get("photos", [])
+        photo_urls = [get_place_photos(photo["photo_reference"]) for photo in photos]
+        return {"photos": photo_urls}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch photos: {e}")
+
+@app.get("/places/{place_id}/photo/{photo_num}")
+def api_get_place_photo(place_id: str, photo_num: int):
+    """
+    Retrieve a specific photo for a place.
+    """
+    try:
+        place_details = get_place_details(place_id)
+        photos = place_details.get("photos", [])
+        if photo_num < 0 or photo_num >= len(photos):
+            raise HTTPException(status_code=400, detail="Invalid photo number")
+        photo_reference = photos[photo_num]["photo_reference"]
+        return {"photo_url": get_place_photos(photo_reference)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch photo: {e}")
+
+@app.get("places/{place_id}/add-owner")
+def api_add_owner_account(place_id: str, user_id: str = Form(...)):
+    """
+    Add an owner account to a restaurant.
+    """
+    return add_owner_account(place_id, user_id)
+
+@app.get("places/{place_id}/change-owner")
+def api_change_owner_account(place_id: str, new_user_id: str = Form(...)):
+    """
+    Change the owner account of a restaurant.
+    """
+    return change_owner_account(place_id, new_user_id)
