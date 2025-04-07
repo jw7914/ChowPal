@@ -101,7 +101,7 @@ def login_check(idToken: str = Query(...)):  # Using Query to retrieve idToken f
         user_data = user_doc.to_dict()
         first_login = user_data.get("firstLogin", False)
 
-    return {"redirect": "/firstlogin" if first_login else "/"}
+    return {"redirect": "/firstlogin" if first_login else "/home"}
 
 @app.post("/users/insert")
 async def insert_user(

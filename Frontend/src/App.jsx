@@ -8,6 +8,7 @@ import RestaurantRegisterPage from "./pages/RestaurantRegisterPage";
 import RestaurantLoginPage from "./pages/RestaurantLoginPage";
 import LandingPage from "./pages/LandingPage";
 import TestImage from "./pages/testImage";
+import SuggestedRestaurantsPage from "./pages/SuggestedRestaurantsPage";
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ function App() {
       <Route path="/firstlogin" element={<FirstLoginPage />} />
       <Route path="/user-login" element={<UserLoginPage />} />
       <Route path="/user-register" element={<UserRegisterPage />} />
+      <Route path="/suggested" element={<SuggestedRestaurantsPage />} />
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />
