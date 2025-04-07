@@ -468,6 +468,54 @@ def get_queue(place_id):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving queue: {e}")
 
+def add_owner_account(place_id, user_id):
+    """
+    Adds the owner account to a restaurant in Firestore.
+
+    Args:
+        place_id (str): The place_id of the restaurant.
+        user_id (str): The UID of the user to set as the owner.
+
+    Returns:
+        dict: Result message and updated restaurant data.
+    """
+    try:
+        place_ref = db.collection("places").document(place_id)
+        doc = place_ref.get()
+
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+
+        place_ref.update({"owner_account": user_id})
+        return {"message": "Owner account added successfully", "place_data": place_ref.get().to_dict()}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding owner account: {e}")
+
+def change_owner_account(place_id, new_user_id):
+    """
+    Changes the owner account of a restaurant in Firestore.
+
+    Args:
+        place_id (str): The place_id of the restaurant.
+        new_user_id (str): The UID of the new user to set as the owner.
+
+    Returns:
+        dict: Result message and updated restaurant data.
+    """
+    try:
+        place_ref = db.collection("places").document(place_id)
+        doc = place_ref.get()
+
+        if not doc.exists:
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+
+        place_ref.update({"owner_account": new_user_id})
+        return {"message": "Owner account changed successfully", "place_data": place_ref.get().to_dict()}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error changing owner account: {e}")
+
 
 def load_nearby(location: str, radius: str):
     """
@@ -482,20 +530,21 @@ def load_nearby(location: str, radius: str):
 
             # Check if the place already exists in Firestore
             place_ref = db.collection("places").document(rest_id)
-            if not place_ref.get().exists or "location" not in place_ref.get().to_dict():
+            if not place_ref.get().exists or "owner_account" not in place_ref.get().to_dict():
                 # If the place doesn't exist, add it to Firestore
                 place_ref.set({
                     "name": place.get("name"),
                     "address": place.get("vicinity"),
                     "location": place.get("geometry", {}).get("location"),
                     "queue": [],
+                    "owner_account": "",
                 })
         return {"message": "Nearby restaurants loaded successfully", "count": len(results)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading nearby places: {e}")
     return {"message": "No nearby places found"}
 
-#print(load_nearby("40.65010000,-73.949580000","500"))
+print(load_nearby("40.69276682486575, -73.98560503927554","500"))
 
 @app.get("/places/search-text")
 def api_search_text_places(query: str, specifications: Union[str, None] = None):
