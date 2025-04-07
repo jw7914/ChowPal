@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import "./LandingPage.css";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { getFirebaseUser } from "../firebase/firebaseUtility";
 
 const LandingPage = () => {
   const [navScrolled, setNavScrolled] = useState(false);
@@ -11,6 +12,13 @@ const LandingPage = () => {
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const navigate = useNavigate();
+  const { user, isLoggedIn } = getFirebaseUser();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/home");
+    }
+  }, [isLoggedIn, navigate]);
 
   // Handle page load and initial animations
   useEffect(() => {
