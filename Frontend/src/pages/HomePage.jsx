@@ -12,11 +12,13 @@ import { GiForkKnifeSpoon } from "react-icons/gi";
 import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; 
 import "./NavBar.css";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const HomePage = () => {
+  const navigate = useNavigate(); 
   const { user, isLoggedIn } = getFirebaseUser();
   const [userDetails, setUserDetails] = useState(null);
   const [locations, setLocations] = useState([]);
@@ -65,15 +67,19 @@ const HomePage = () => {
         overflow: "hidden",
       }}
     >
-      {/* Vertical Navbar */}
+      {/* Navbar */}
       <div className="right-navbar">
-        <div className="nav-item" title="Home">
+        <div className="nav-item" title="Home" onClick={() => navigate("/home")}>
           <FaHome />
         </div>
         <div className="nav-item" title="Chat">
           <IoIosChatboxes />
         </div>
-        <div className="nav-item" title="Suggested Restaurants">
+        <div
+          className="nav-item"
+          title="Suggested Restaurants"
+          onClick={() => navigate("/suggested")}
+        >
           <GiForkKnifeSpoon />
         </div>
         <div className="nav-item" title="Profile">
@@ -140,7 +146,7 @@ const PoiMarkers = ({ pois }) => {
   return (
     <>
       {pois.map((poi) => (
-         <AdvancedMarker key={poi.key} position={poi.location} title={poi.name}>
+        <AdvancedMarker key={poi.key} position={poi.location} title={poi.name}>
           <Pin background="#FBBC04" glyphColor="#000" borderColor="#000" />
         </AdvancedMarker>
       ))}
