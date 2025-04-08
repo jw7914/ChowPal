@@ -5,19 +5,22 @@ import { auth } from "./firebaseconfig";
 export const getFirebaseUser = () => {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true); // <-- add loading
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        setLoggedIn(true);
         setUser(currentUser);
+        setLoggedIn(true);
       } else {
-        setLoggedIn(false);
         setUser(null);
+        setLoggedIn(false);
       }
+      setLoading(false);
     });
+
     return () => unsub();
   }, []);
 
-  return { user, isLoggedIn };
+  return { user, isLoggedIn, loading };
 };

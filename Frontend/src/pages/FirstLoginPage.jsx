@@ -1,28 +1,49 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, TextField, Button } from "@mui/material";
-import { getAuth } from "firebase/auth";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import "./FirstLoginPage.css";
-import { handleInsertUser } from "../firebase/firestoreFunctions";
-
-const auth = getAuth();
-const storage = getStorage();
+import {
+  getUserDetails,
+  handleInsertUser,
+} from "../firebase/firestoreFunctions";
+import { getFirebaseUser } from "../firebase/firebaseUtility";
+import { auth } from "../firebase/firebaseconfig";
 
 const FirstLoginPage = () => {
   const videoRef = useRef(null);
   const navigate = useNavigate();
   const [photos, setPhotos] = useState([]);
+  const { user, isLoggedIn, loading } = getFirebaseUser();
+  const [userDetails, setUserDetails] = useState(null);
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.play();
+    const fetchUser = async () => {
+      if (user) {
+        try {
+          const details = await getUserDetails(user.accessToken);
+          setUserDetails(details);
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+
+    if (user) {
+      fetchUser();
     }
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (loading) return; // Wait for Firebase to finish loading
+    if (!isLoggedIn) {
+      navigate("/");
+    } else if (userDetails && !userDetails.firstLogin) {
+      navigate("/home");
+    }
+  }, [navigate, isLoggedIn, loading, userDetails]);
 
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
-
     const totalPhotos = [...photos, ...selectedFiles];
 
     if (totalPhotos.length > 3) {
@@ -55,13 +76,13 @@ const FirstLoginPage = () => {
       });
 
       const result = await handleInsertUser(formData);
-
       navigate("/home");
     } catch (err) {
       console.error("Unexpected error during submission:", err);
       alert("Something went wrong.");
     }
   };
+
   return (
     <div className="overlay-container">
       <video ref={videoRef} autoPlay loop muted className="background-video">

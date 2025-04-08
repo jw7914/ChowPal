@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 import UserLoginPage from "./pages/UserLoginPage";
 import FirstLoginPage from "./pages/FirstLoginPage";
 import UserRegisterPage from "./pages/UserRegisterPage";
@@ -9,12 +14,14 @@ import RestaurantLoginPage from "./pages/RestaurantLoginPage";
 import LandingPage from "./pages/LandingPage";
 import TestImage from "./pages/testImage";
 import SuggestedRestaurantsPage from "./pages/SuggestedRestaurantsPage";
+import { getAuth, signOut } from "firebase/auth";
+import { firebaseapp } from "./firebase/firebaseconfig";
 import RestaurantDetails from "./pages/RestaurantDetails";
 import RestaurantQueue from "./pages/RestaurantQueue";
 
 const Logout = () => {
   const navigate = useNavigate();
-  const auth = getAuth();
+  const auth = getAuth(firebaseapp);
 
   signOut(auth)
     .then(() => {

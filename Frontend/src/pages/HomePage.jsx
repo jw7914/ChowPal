@@ -13,19 +13,20 @@ import { GiForkKnifeSpoon } from "react-icons/gi";
 import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import "./NavBar.css";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const HomePage = () => {
-  const navigate = useNavigate(); 
-  const { user, isLoggedIn } = getFirebaseUser();
+  const navigate = useNavigate();
+  const { user, isLoggedIn, loading } = getFirebaseUser();
   const [userDetails, setUserDetails] = useState(null);
   const [locations, setLocations] = useState([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true);
 
   useEffect(() => {
-    const fetchUserName = async () => {
+    const fetchUser = async () => {
       if (user) {
         try {
           const details = await getUserDetails(user.accessToken);
@@ -35,7 +36,9 @@ const HomePage = () => {
         }
       }
     };
-    fetchUserName();
+    if (user) {
+      fetchUser();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -44,20 +47,14 @@ const HomePage = () => {
         const res = await fetch("http://localhost:8000/restaurants/locations");
         const data = await res.json();
         setLocations(data.locations);
+        setIsLoadingLocations(false);
       } catch (error) {
         console.error("Error fetching locations:", error);
+        setIsLoadingLocations(false);
       }
     };
     fetchLocations();
   }, []);
-
-  useEffect(() => {
-    if (userDetails) {
-      console.log("User details:", userDetails);
-      console.log(userDetails.name);
-      console.log(user);
-    }
-  }, [userDetails]);
 
   return (
     <div
@@ -70,7 +67,11 @@ const HomePage = () => {
     >
       {/* Navbar */}
       <div className="right-navbar">
-        <div className="nav-item" title="Home" onClick={() => navigate("/home")}>
+        <div
+          className="nav-item"
+          title="Home"
+          onClick={() => navigate("/home")}
+        >
           <FaHome />
         </div>
         <div className="nav-item" title="Chat">
@@ -119,25 +120,42 @@ const HomePage = () => {
             Loading user details...
           </p>
         )}
-        <APIProvider
-          apiKey={GOOGLE_MAPS_API_KEY}
-          onLoad={() => console.log("Maps API has loaded.")}
-        >
-          <Map
-            style={{ maxHeight: "100vh" }}
-            defaultZoom={13}
-            defaultCenter={{ lat: 40.6782, lng: -73.9442 }} // Brooklyn coordinates
-            options={{
-              disableDefaultUI: true,
-              draggable: true,
-              scrollwheel: true,
+
+        {isLoadingLocations ? (
+          <p
+            style={{
+              position: "absolute",
+              top: 40,
+              left: 10,
+              background: "rgba(255, 255, 255, 0.8)",
+              padding: "5px 10px",
+              borderRadius: "8px",
+              zIndex: 1000,
             }}
-            mapId="a55e2de4b4bc2090"
-            onLoad={(map) => console.log("Map Loaded:", map)}
           >
-            <PoiMarkers pois={locations} />
-          </Map>
-        </APIProvider>
+            Loading locations...
+          </p>
+        ) : (
+          <APIProvider
+            apiKey={GOOGLE_MAPS_API_KEY}
+            onLoad={() => console.log("Maps API has loaded.")}
+          >
+            <Map
+              style={{ maxHeight: "100vh" }}
+              defaultZoom={13}
+              defaultCenter={{ lat: 40.6782, lng: -73.9442 }} // Brooklyn coordinates
+              options={{
+                disableDefaultUI: true,
+                draggable: true,
+                scrollwheel: true,
+              }}
+              mapId="a55e2de4b4bc2090"
+              onLoad={(map) => console.log("Map Loaded:", map)}
+            >
+              <PoiMarkers pois={locations} />
+            </Map>
+          </APIProvider>
+        )}
       </div>
     </div>
   );
