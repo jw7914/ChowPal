@@ -9,6 +9,8 @@ import RestaurantLoginPage from "./pages/RestaurantLoginPage";
 import LandingPage from "./pages/LandingPage";
 import TestImage from "./pages/testImage";
 import SuggestedRestaurantsPage from "./pages/SuggestedRestaurantsPage";
+import RestaurantDetails from "./pages/RestaurantDetails";
+import RestaurantQueue from "./pages/RestaurantQueue";
 
 const Logout = () => {
   const navigate = useNavigate();
@@ -38,6 +40,8 @@ function App() {
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />
+      <Route path="/restaurant/:id" element={<RestaurantDetails />} />
+      <Route path="/restaurant/:id/queue" element={<RestaurantQueue />} />
       <Route path="*" element={<NotFoundPage />} /> {/* Catch-all route */}
     </Routes>
   );

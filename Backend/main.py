@@ -60,6 +60,34 @@ def get_user(idToken):
     except Exception:
         return None
 
+@app.get("/users/uid")
+def api_get_uid(idToken: str = Query(...)):
+    """Get user UID from ID token."""
+    if not idToken:
+        raise HTTPException(status_code=400, detail="Missing ID token")
+    
+    uid = get_user(idToken)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid user token")
+    
+    return {"uid": uid}
+
+@app.get("/users/details")
+def api_get_user_details(uid: str = Query(...)):
+    """Get user details from Firestore."""
+    if not uid:
+        raise HTTPException(status_code=400, detail="Missing UID")
+    
+    # Get user details from Firestore
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+
+    # Check if the document exists
+    if not user_doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Return the user document data
+    return user_doc.to_dict()
 
 # that uid only exists in auth db, that can only be used for auth 
 # if we want like other things associated with them we need to use firestore db
@@ -296,14 +324,14 @@ def get_place_details(place_id, fields=None):
     """
     url = "https://places.googleapis.com/v1/places/"
     if not fields:
-        fields= "name,formatted_address,geometry/location,rating,opening_hours/periods/open/close,photos,website,reviews"
+        fields= "name,photos"
 
     # Make the API request
-    r = requests.get(url + place_id + '&key=' + "?fields"+fields+PLACES_API_KEY)
+    r = requests.get(url + place_id + "?fields=" + fields + '&key=' + PLACES_API_KEY)
     x = r.json()
 
     # Return the results from the API response
-    return x['result']
+    return x
 
 def get_place_photos(photo_reference):
     """
@@ -425,7 +453,8 @@ def add_user_to_queue(place_id, user_id):
         queue = place_data.get("queue", [])
 
         if user_id in queue:
-            return {"message": "User is already in the queue", "queue": queue}
+            raise HTTPException(status_code=400, detail="User is already in the queue")
+
 
         queue.append(user_id)
         place_ref.update({"queue": queue})
@@ -487,7 +516,7 @@ def get_queue(place_id):
         place_data = doc.to_dict()
         queue = place_data.get("queue", [])
 
-        return {"message": "Queue retrieved successfully", "queue": queue}
+        return {"queue": queue}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving queue: {e}")
@@ -631,6 +660,7 @@ def get_restaurant_locations():
                 locations.append({
                     "key": doc.id,
                     "name": name,
+                    "address": data.get("address"),
                     "location": {"lat": loc.get("lat"), "lng": loc.get("lng")}
                 })
 
@@ -646,7 +676,7 @@ def api_get_place_photos(place_id: str):
     try:
         place_details = get_place_details(place_id)
         photos = place_details.get("photos", [])
-        photo_urls = [get_place_photos(photo["photo_reference"]) for photo in photos]
+        photo_urls = [get_place_photos(photo.get("name")) for photo in photos if photo.get("name")]
         return {"photos": photo_urls}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch photos: {e}")
@@ -666,14 +696,14 @@ def api_get_place_photo(place_id: str, photo_num: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch photo: {e}")
 
-@app.get("places/{place_id}/add-owner")
+@app.get("/places/{place_id}/add-owner")
 def api_add_owner_account(place_id: str, user_id: str = Form(...)):
     """
     Add an owner account to a restaurant.
     """
     return add_owner_account(place_id, user_id)
 
-@app.get("places/{place_id}/change-owner")
+@app.get("/places/{place_id}/change-owner")
 def api_change_owner_account(place_id: str, new_user_id: str = Form(...)):
     """
     Change the owner account of a restaurant.
