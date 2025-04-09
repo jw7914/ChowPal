@@ -685,28 +685,33 @@ def get_queue(place_id):
         raise HTTPException(status_code=500, detail=f"Error retrieving queue: {e}")
 
 def add_owner_account(place_id, user_id):
-    """
-    Adds the owner account to a restaurant in Firestore.
+    place_ref = db.collection("places").document(place_id)
+    user_ref = db.collection("users").document(user_id)
 
-    Args:
-        place_id (str): The place_id of the restaurant.
-        user_id (str): The UID of the user to set as the owner.
+    place_doc = place_ref.get()
+    if not place_doc.exists:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
 
-    Returns:
-        dict: Result message and updated restaurant data.
-    """
-    try:
-        place_ref = db.collection("places").document(place_id)
-        doc = place_ref.get()
+    current_owner = place_doc.get("owner_account")
+    if current_owner:
+        raise HTTPException(status_code=400, detail="Restaurant already claimed")
 
-        if not doc.exists:
-            raise HTTPException(status_code=404, detail="Restaurant not found")
+    place_ref.update({
+        "owner_account": user_id
+    })
 
-        place_ref.update({"owner_account": user_id})
-        return {"message": "Owner account added successfully", "place_data": place_ref.get().to_dict()}
+    user_ref.update({
+        "claimed": True,
+        "restaurant_id": place_id
+    })
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error adding owner account: {e}")
+    return {
+        "message": "Restaurant successfully claimed",
+        "user_claimed": True,
+        "restaurant_id": place_id
+    }
+
+
 
 def change_owner_account(place_id, new_user_id):
     """
@@ -859,7 +864,7 @@ def api_get_place_photo(place_id: str, photo_num: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch photo: {e}")
 
-@app.get("/places/{place_id}/add-owner")
+@app.post("/places/{place_id}/add-owner")
 def api_add_owner_account(place_id: str, user_id: str = Form(...)):
     """
     Add an owner account to a restaurant.

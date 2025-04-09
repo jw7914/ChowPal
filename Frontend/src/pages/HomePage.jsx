@@ -14,13 +14,14 @@ import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase/firebaseconfig";
 import "./NavBar.css";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const { user, isLoggedIn, loading } = getFirebaseUser();
+  const { user } = getFirebaseUser();
   const [userDetails, setUserDetails] = useState(null);
   const [locations, setLocations] = useState([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
@@ -31,6 +32,7 @@ const HomePage = () => {
         try {
           const details = await getUserDetails(user.accessToken);
           setUserDetails(details);
+          console.log("Fetched userDetails:", details);
         } catch (error) {
           console.error("Error fetching user data:", error);
         }
@@ -74,16 +76,22 @@ const HomePage = () => {
         >
           <FaHome />
         </div>
-        <div className="nav-item" title="Chat">
-          <IoIosChatboxes />
-        </div>
-        <div
-          className="nav-item"
-          title="Suggested Restaurants"
-          onClick={() => navigate("/suggested")}
-        >
-          <GiForkKnifeSpoon />
-        </div>
+
+        {userDetails?.accountType === "user" && (
+          <>
+            <div className="nav-item" title="Chat">
+              <IoIosChatboxes />
+            </div>
+            <div
+              className="nav-item"
+              title="Suggested Restaurants"
+              onClick={() => navigate("/suggested")}
+            >
+              <GiForkKnifeSpoon />
+            </div>
+          </>
+        )}
+
         <div className="nav-item" title="Profile">
           <IoPersonSharp />
         </div>
@@ -92,19 +100,21 @@ const HomePage = () => {
       {/* Main Content */}
       <div style={{ height: "110%", width: "100%" }}>
         {userDetails ? (
-          <p
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 100,
-              background: "rgba(255, 255, 255, 0.8)",
-              padding: "5px 10px",
-              borderRadius: "8px",
-              zIndex: 1000,
-            }}
-          >
-            Welcome, {userDetails.name}!
-          </p>
+          userDetails.accountType === "user" && (
+            <p
+              style={{
+                position: "absolute",
+                top: 10,
+                left: 100,
+                background: "rgba(255, 255, 255, 0.8)",
+                padding: "5px 10px",
+                borderRadius: "8px",
+                zIndex: 1000,
+              }}
+            >
+              Welcome, {userDetails.name}!
+            </p>
+          )
         ) : (
           <p
             style={{
@@ -136,23 +146,19 @@ const HomePage = () => {
             Loading locations...
           </p>
         ) : (
-          <APIProvider
-            apiKey={GOOGLE_MAPS_API_KEY}
-            onLoad={() => console.log("Maps API has loaded.")}
-          >
+          <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
             <Map
               style={{ maxHeight: "100vh" }}
               defaultZoom={13}
-              defaultCenter={{ lat: 40.6782, lng: -73.9442 }} // Brooklyn coordinates
+              defaultCenter={{ lat: 40.6782, lng: -73.9442 }}
               options={{
                 disableDefaultUI: true,
                 draggable: true,
                 scrollwheel: true,
               }}
               mapId="a55e2de4b4bc2090"
-              onLoad={(map) => console.log("Map Loaded:", map)}
             >
-              <PoiMarkers pois={locations} />
+              <PoiMarkers pois={locations} userDetails={userDetails} />
             </Map>
           </APIProvider>
         )}
@@ -161,7 +167,7 @@ const HomePage = () => {
   );
 };
 
-const PoiMarkers = ({ pois }) => {
+const PoiMarkers = ({ pois, userDetails }) => {
   const [selected, setSelected] = useState(null);
   const [photoUrl, setPhotoUrl] = useState(null);
   const navigate = useNavigate();
@@ -170,10 +176,12 @@ const PoiMarkers = ({ pois }) => {
     const fetchPhoto = async () => {
       if (selected) {
         try {
-          const res = await fetch(`http://localhost:8000/places/${selected.key}/photos`);
+          const res = await fetch(
+            `http://localhost:8000/places/${selected.key}/photos`
+          );
           const data = await res.json();
           if (data.photos && data.photos.length > 0) {
-            setPhotoUrl(data.photos[0]); // just show the first photo
+            setPhotoUrl(data.photos[0]);
           } else {
             setPhotoUrl(null);
           }
@@ -186,6 +194,38 @@ const PoiMarkers = ({ pois }) => {
 
     fetchPhoto();
   }, [selected]);
+
+  const handleClaimRestaurant = async (placeId) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) {
+      alert("Not authenticated.");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("user_id", userId);
+    
+    try {
+
+      const res = await fetch(`http://localhost:8000/places/${placeId}/add-owner`, {
+        method: "POST",
+        body: formData,
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        alert(`Error: ${data.detail || "Could not claim restaurant"}`);
+        return;
+      }
+  
+      alert("Restaurant successfully claimed!");
+      // Optionally update UI
+    } catch (error) {
+      console.error("Error claiming restaurant:", error);
+      alert("Something went wrong.");
+    }
+  };
 
   return (
     <>
@@ -209,7 +249,9 @@ const PoiMarkers = ({ pois }) => {
           }}
         >
           <div style={{ maxWidth: "200px" }}>
-            <h4 style={{ margin: "8px 0 4px" }}><strong>{selected.name}</strong></h4>
+            <h4 style={{ margin: "8px 0 4px" }}>
+              <strong>{selected.name}</strong>
+            </h4>
             <img
               src={
                 photoUrl
@@ -240,6 +282,19 @@ const PoiMarkers = ({ pois }) => {
             >
               View Details
             </button>
+
+            {userDetails?.accountType === "restaurant" &&
+              userDetails?.claimed === false && (
+                <button
+                  style={{ /* styling here */ }}
+                  onClick={() => {
+                    console.log("Attempting to claim place:", selected.key);  
+                    handleClaimRestaurant(selected.key);
+                  }}
+                >
+                  Claim Restaurant
+                </button>
+              )}
           </div>
         </InfoWindow>
       )}
