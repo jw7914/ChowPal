@@ -5,7 +5,6 @@ import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
 import "./NavBar.css";
-import restaurantImg1 from "../assets/chowpal_hero.png";
 import { getFirebaseUser } from "../firebase/firebaseUtility";
 
 const RestaurantQueue = () => {
@@ -24,10 +23,10 @@ const RestaurantQueue = () => {
       try {
         const res = await fetch(`http://localhost:8000/places/${id}/queue`);
         const data = await res.json();
-  
+
         const uids = data.queue;
         setQueue(uids); // still keep raw queue if needed
-  
+
         // Fetch user details in parallel
         const userPromises = uids.map(async (uid) => {
           const res = await fetch(`http://localhost:8000/users/details?uid=${uid}`);
@@ -38,37 +37,37 @@ const RestaurantQueue = () => {
             return { uid, name: "Unknown User", error: true };
           }
         });
-  
+
         const usersData = await Promise.all(userPromises);
         setQueueUsers(usersData);
       } catch (error) {
         console.error("Error fetching queue or user details:", error);
       }
     };
-  
+
     fetchQueue();
   }, [id]);
-  
+
 
   useEffect(() => {
       const getUid = async () => {
         if (!user) return; // Don't proceed if user hasn't loaded
-    
+
         try {
           const idToken = await user.accessToken; // Get the token properly
           const res = await fetch(`http://localhost:8000/users/uid?idToken=${encodeURIComponent(idToken)}`);
-    
+
           if (!res.ok) {
             throw new Error("Failed to fetch UID");
           }
-    
+
           const data = await res.json();
           setUid(data.uid);
         } catch (error) {
           console.error("Error fetching user UID:", error);
         }
       };
-    
+
       getUid();
     }, [user]);
 
@@ -76,12 +75,12 @@ const RestaurantQueue = () => {
       try {
         const formData = new FormData();
         formData.append("user_id", uid);
-    
+
         const res = await fetch(`http://localhost:8000/places/${id}/queue/add`, {
           method: "POST",
           body: formData,
         });
-    
+
         if (!res.ok) {
           const error = await res.json();
           if (res.status === 400 && error.detail === "User is already in the queue") {
@@ -90,10 +89,10 @@ const RestaurantQueue = () => {
           }
           throw new Error(error.detail || "Unknown error");
         }
-    
+
         const data = await res.json();
         alert("Successfully joined the queue!");
-    
+
         // Optionally refresh queue data
         window.location.reload();
       } catch (error) {
@@ -101,12 +100,86 @@ const RestaurantQueue = () => {
         alert(error.message || "Error joining queue. Please try again.");
       }
     };
+
+    const handleMatch = async (user) => {
+      if (user.uid === uid) {
+        alert("You can't match with yourself!");
+        return;
+      }
     
-    const handleMatch = (user) => {
-      alert(`You matched with ${user.name || user.uid}!`);
-      // TODO: Add actual match logic like navigating to chat, etc.
+      try {
+        const matchFormData = new FormData();
+        matchFormData.append("user_id", uid);
+        matchFormData.append("match_id", user.uid);
+    
+        const matchRes = await fetch("http://localhost:8000/users/match", {
+          method: "POST",
+          body: matchFormData,
+        });
+    
+        const matchData = await matchRes.json();
+    
+        if (!matchRes.ok) {
+          alert(matchData.detail || "Match failed");
+          return;
+        }
+    
+        alert(matchData.message); // "Match confirmed!" or "Match request sent"
+    
+        if (matchData.status === "pending") {
+          // Only join the queue on pending request
+          const queueFormData = new FormData();
+          queueFormData.append("user_id", uid);
+    
+          const queueRes = await fetch(`http://localhost:8000/places/${id}/queue/add`, {
+            method: "POST",
+            body: queueFormData,
+          });
+    
+          const queueData = await queueRes.json();
+    
+          if (!queueRes.ok && queueRes.status === 400 && queueData.detail === "User is already in the queue") {
+            console.log("Already in queue.");
+          } else if (!queueRes.ok) {
+            console.error("Queue error:", queueData);
+            alert("Failed to join the queue.");
+          } else {
+            console.log("Added to queue:", queueData.queue);
+          }
+        }
+        else if (matchData.status === "confirmed") {
+    
+          const removeFromQueue = async (userToRemoveUid) => {
+            const formData = new FormData();
+            formData.append("user_id", userToRemoveUid);
+    
+            const res = await fetch(`http://localhost:8000/places/${id}/queue/remove`, {
+              method: "POST",
+              body: formData,
+            });
+    
+            if (!res.ok) {
+              const errData = await res.json();
+              console.error(`Failed to remove ${userToRemoveUid}:`, errData);
+            } else {
+              console.log(`Removed ${userToRemoveUid} from queue.`);
+            }
+          };
+    
+          // Remove both users
+          await removeFromQueue(uid);
+          await removeFromQueue(user.uid);
+        }
+        window.location.reload();
+      } catch (error) {
+        console.error("Error during match:", error);
+        alert("Something went wrong.");
+      }
     };
     
+    
+
+
 
   return (
     <div

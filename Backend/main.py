@@ -226,8 +226,171 @@ def delete_user(user_id: str):
             raise HTTPException(status_code=500, detail=f"Error deleting user: {e}")
     else:
         return {"message": "User does not exist"}
-    
-    
+
+#================================================================================================
+# User Matching
+#================================================================================================
+
+@app.post("/users/match_pending")
+def add_pending_match(user_id: str, match_id: str):
+    """
+    Add a pending match to the user's document in Firestore.
+    """
+    try:
+        pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+        pending_doc = pending_ref.get()
+        if not pending_doc.exists:
+            pending_ref.set({"matches": []})
+            pending_doc = pending_ref.get()
+        pending_data = pending_doc.to_dict()
+        pending_matches = pending_data.get("matches", [])
+        if match_id in pending_matches:
+            raise HTTPException(status_code=400, detail="Match already exists in pending matches")
+        pending_matches.append(match_id)
+        pending_ref.update({"matches": pending_matches})
+        return {"message": "Pending match added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding pending match: {e}")
+
+@app.delete("/users/match_pending")
+def remove_pending_match(user_id: str, match_id: str):
+    """
+    Remove a pending match from the user's document in Firestore.
+    """
+    try:
+        pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+        pending_doc = pending_ref.get()
+        if not pending_doc.exists:
+            raise HTTPException(status_code=404, detail="No pending matches found")
+        pending_data = pending_doc.to_dict()
+        pending_matches = pending_data.get("matches", [])
+        if match_id not in pending_matches:
+            raise HTTPException(status_code=400, detail="Match does not exist in pending matches")
+        pending_matches.remove(match_id)
+        pending_ref.update({"matches": pending_matches})
+        return {"message": "Pending match removed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error removing pending match: {e}")
+
+@app.get("/users/match_pending")
+def get_pending_matches(user_id: str):
+    """
+    Get all pending matches for the user.
+    """
+    try:
+        pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+        pending_doc = pending_ref.get()
+        if not pending_doc.exists:
+            raise HTTPException(status_code=404, detail="No pending matches found")
+        pending_data = pending_doc.to_dict()
+        return {"matches": pending_data.get("matches", [])}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving pending matches: {e}")
+
+@app.post("/users/match_confirmed")
+def add_confirmed_match(user_id: str, match_id: str):
+    """
+    Add a confirmed match to the user's document in Firestore.
+    """
+    try:
+        confirmed_ref = db.collection("users").document(user_id).collection("matches").document("confirmed")
+        confirmed_doc = confirmed_ref.get()
+        if not confirmed_doc.exists:
+            confirmed_ref.set({"matches": []})
+            confirmed_doc = confirmed_ref.get()
+        confirmed_data = confirmed_doc.to_dict()
+        confirmed_matches = confirmed_data.get("matches", [])
+        if match_id in confirmed_matches:
+            raise HTTPException(status_code=400, detail="Match already exists in confirmed matches")
+        confirmed_matches.append(match_id)
+        confirmed_ref.update({"matches": confirmed_matches})
+        return {"message": "Confirmed match added successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error adding confirmed match: {e}")
+
+@app.delete("/users/match_confirmed")
+def remove_confirmed_match(user_id: str, match_id: str):
+    """
+    Remove a confirmed match from the user's document in Firestore.
+    """
+    try:
+        confirmed_ref = db.collection("users").document(user_id).collection("matches").document("confirmed")
+        confirmed_doc = confirmed_ref.get()
+        if not confirmed_doc.exists:
+            raise HTTPException(status_code=404, detail="No confirmed matches found")
+        confirmed_data = confirmed_doc.to_dict()
+        confirmed_matches = confirmed_data.get("matches", [])
+        if match_id not in confirmed_matches:
+            raise HTTPException(status_code=400, detail="Match does not exist in confirmed matches")
+        confirmed_matches.remove(match_id)
+        confirmed_ref.update({"matches": confirmed_matches})
+        return {"message": "Confirmed match removed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error removing confirmed match: {e}")
+
+@app.get("/users/match_confirmed")
+def get_confirmed_matches(user_id: str):
+    """
+    Get all confirmed matches for the user.
+    """
+    try:
+        confirmed_ref = db.collection("users").document(user_id).collection("matches").document("confirmed")
+        confirmed_doc = confirmed_ref.get()
+        if not confirmed_doc.exists:
+            raise HTTPException(status_code=404, detail="No confirmed matches found")
+        confirmed_data = confirmed_doc.to_dict()
+        return {"matches": confirmed_data.get("matches", [])}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving confirmed matches: {e}")
+
+@app.post("/users/match")
+def handle_match(user_id: str=Form(...), match_id: str = Form(...)):
+    """
+    Handles user matching. If match_id has user_id in pending, confirm match.
+    Otherwise, add match_id to user_id's pending.
+    """
+    try:
+        # Check if match_id has user_id in pending
+        match_pending_ref = db.collection("users").document(match_id).collection("matches").document("pending")
+        match_pending_doc = match_pending_ref.get()
+        match_pending_list = match_pending_doc.to_dict().get("matches", []) if match_pending_doc.exists else []
+
+        if user_id in match_pending_list:
+            # Confirm for both
+            for uid1, uid2 in [(user_id, match_id), (match_id, user_id)]:
+                conf_ref = db.collection("users").document(uid1).collection("matches").document("confirmed")
+                conf_doc = conf_ref.get()
+                if not conf_doc.exists:
+                    conf_ref.set({"matches": []})
+                conf_data = conf_doc.to_dict()
+                if uid2 not in conf_data.get("matches", []):
+                    conf_data["matches"].append(uid2)
+                    conf_ref.update({"matches": conf_data["matches"]})
+
+            # Remove user_id from match_id's pending
+            match_pending_list.remove(user_id)
+            match_pending_ref.update({"matches": match_pending_list})
+
+            return {"status": "confirmed", "message": "Match confirmed!"}
+        else:
+            # Add match_id to user_id's pending
+            user_pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+            user_pending_doc = user_pending_ref.get()
+            if not user_pending_doc.exists:
+                user_pending_ref.set({"matches": [match_id]})
+            else:
+                user_data = user_pending_doc.to_dict()
+                if match_id not in user_data["matches"]:
+                    user_data["matches"].append(match_id)
+                    user_pending_ref.update({"matches": user_data["matches"]})
+
+            return {"status": "pending", "message": "Match request sent"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
 #================================================================================================
 # Places API Handling
 #================================================================================================
