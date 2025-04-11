@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { auth } from "./firebase"; // Adjust path as needed
+import { auth } from "./firebase/firebaseconfig";
 
 const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        navigate("/login");
+        navigate("/");
       } else {
         setLoading(false);
       }
@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
   }, [navigate]);
 
   if (loading) {
-    return <div>Loading...</div>; // Optional: show spinner or skeleton
+    return <div>Loading...</div>;
   }
 
   return children;

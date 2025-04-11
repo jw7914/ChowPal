@@ -87,12 +87,22 @@ const UserRegisterPage = () => {
 
   return (
     <div className={styles.overlayContainer}>
-      <video ref={videoRef} autoPlay loop muted className={styles.backgroundVideo}>
+      <video
+        ref={videoRef}
+        autoPlay
+        loop
+        muted
+        className={styles.backgroundVideo}
+      >
         <source src="src/assets/login_bg.mp4" type="video/mp4" />
       </video>
       <div className={styles.darkOverlay}></div>
 
-      <Container component="main" maxWidth="xs" className={styles.loginContainer}>
+      <Container
+        component="main"
+        maxWidth="xs"
+        className={styles.loginContainer}
+      >
         <Box className={styles.loginContainer}>
           <img
             src="src/assets/chowpal_logo.png"
@@ -160,7 +170,7 @@ const UserRegisterPage = () => {
           </Box>
           <Typography variant="h6">
             Have an account?{" "}
-            <Link href="/" underline="none">
+            <Link href="/user-login" underline="none">
               Login here
             </Link>
           </Typography>

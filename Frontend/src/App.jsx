@@ -19,19 +19,40 @@ import { firebaseapp } from "./firebase/firebaseconfig";
 import RestaurantDetails from "./pages/RestaurantDetails";
 import RestaurantQueue from "./pages/RestaurantQueue";
 import Logout from "./pages/Logout";
-
+import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/home" element={<HomePage />} />
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/restaurant-login" element={<RestaurantLoginPage />} />
       <Route path="/restaurant-register" element={<RestaurantRegisterPage />} />
-      <Route path="/firstlogin" element={<FirstLoginPage />} />
+      <Route
+        path="/firstlogin"
+        element={
+          <ProtectedRoute>
+            <FirstLoginPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/user-login" element={<UserLoginPage />} />
       <Route path="/user-register" element={<UserRegisterPage />} />
-      <Route path="/suggested" element={<SuggestedRestaurantsPage />} />
+      <Route
+        path="/suggested"
+        element={
+          <ProtectedRoute>
+            <SuggestedRestaurantsPage />
+          </ProtectedRoute>
+        }
+      />
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />
