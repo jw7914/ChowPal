@@ -18,21 +18,9 @@ import { getAuth, signOut } from "firebase/auth";
 import { firebaseapp } from "./firebase/firebaseconfig";
 import RestaurantDetails from "./pages/RestaurantDetails";
 import RestaurantQueue from "./pages/RestaurantQueue";
+import Logout from "./pages/Logout";
 
-const Logout = () => {
-  const navigate = useNavigate();
-  const auth = getAuth(firebaseapp);
 
-  signOut(auth)
-    .then(() => {
-      navigate("/"); // Redirect to home page after logout
-    })
-    .catch((error) => {
-      console.error("Logout Error:", error.message);
-    });
-
-  return null; // This ensures the page doesn’t render anything
-};
 function App() {
   return (
     <Routes>
