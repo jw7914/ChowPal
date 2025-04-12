@@ -1,5 +1,5 @@
 from typing import Union, List
-from firebase_admin import credentials, auth, firestore, storage
+from firebase_admin import credentials, auth, firestore, storage, db as realtimeDB
 import os
 from uuid import uuid4
 from dotenv import load_dotenv
@@ -26,12 +26,13 @@ firebase_config = {
     "universe_domain": os.getenv("FIREBASE_UNIVERSE_DOMAIN")
 }
 creds = credentials.Certificate(firebase_config)
-firebase_admin.initialize_app(creds, {'storageBucket': os.getenv("FIREBASE_BUCKET")})
+firebase_admin.initialize_app(creds, {'storageBucket': os.getenv("FIREBASE_BUCKET"), 
+                                      'databaseURL': os.getenv("REALTIME_DB")})
 
 
 
 # Initialize Firestore
-db = firestore.client()
+firestoreDB = firestore.client()
 
 app = FastAPI()
 
@@ -76,7 +77,7 @@ def api_get_user_details(uid: str = Query(...)):
         raise HTTPException(status_code=400, detail="Missing UID")
     
     # Get user details from Firestore
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
 
     # Check if the document exists
@@ -97,7 +98,7 @@ def find_user(idToken: str = Query(...)):
     if not uid:
         raise HTTPException(status_code=401, detail="Invalid user token")
     
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
 
     # Check if the document exists
@@ -116,7 +117,7 @@ def login_check(idToken: str = Query(...)):  # Using Query to retrieve idToken f
     if not uid:
         raise HTTPException(status_code=401, detail="Invalid user token")
 
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
 
     if not user_doc.exists:
@@ -155,7 +156,7 @@ async def insert_user(
         photo_urls.append(blob.public_url)
 
     # 3. Save user info in Firestore
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
     if not user_doc.exists:
         raise HTTPException(status_code=404, detail="User not found")
@@ -185,7 +186,7 @@ def update_user(data: dict):
     email = data.get("email")
     name = data.get("name")
     # Ensure user exists before updating
-    user_ref = db.collection("Users").document(user_id)
+    user_ref = firestoreDB.collection("Users").document(user_id)
     user_doc = user_ref.get()
 
     if user_doc.exists:
@@ -212,7 +213,7 @@ def update_user(data: dict):
 def delete_user(user_id: str):
     """Delete a user from Firestore."""
     # Ensure user exists before deleting
-    user_ref = db.collection("Users").document(user_id)
+    user_ref = firestoreDB.collection("Users").document(user_id)
     user_doc = user_ref.get()
 
     if user_doc.exists:
@@ -229,7 +230,7 @@ def get_claimed_restaurant(uid: str):
     """
     Retrieve the restaurant document owned by this user.
     """
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
 
     if not user_doc.exists:
@@ -241,7 +242,7 @@ def get_claimed_restaurant(uid: str):
     if not restaurant_id:
         raise HTTPException(status_code=404, detail="User has not claimed a restaurant")
 
-    restaurant_ref = db.collection("places").document(restaurant_id)
+    restaurant_ref = firestoreDB.collection("places").document(restaurant_id)
     restaurant_doc = restaurant_ref.get()
 
     if not restaurant_doc.exists:
@@ -271,7 +272,7 @@ async def upload_restaurant_photos(
         photo_urls.append(blob.public_url)
 
     # Save to Firestore (optional)
-    db.collection("places").document(place_id).update({
+    firestoreDB.collection("places").document(place_id).update({
         "photo_urls": photo_urls
     })
 
@@ -288,7 +289,7 @@ def add_pending_match(user_id: str, match_id: str):
     Add a pending match to the user's document in Firestore.
     """
     try:
-        pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+        pending_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("pending")
         pending_doc = pending_ref.get()
         if not pending_doc.exists:
             pending_ref.set({"matches": []})
@@ -309,7 +310,7 @@ def remove_pending_match(user_id: str, match_id: str):
     Remove a pending match from the user's document in Firestore.
     """
     try:
-        pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+        pending_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("pending")
         pending_doc = pending_ref.get()
         if not pending_doc.exists:
             raise HTTPException(status_code=404, detail="No pending matches found")
@@ -329,7 +330,7 @@ def get_pending_matches(user_id: str):
     Get all pending matches for the user.
     """
     try:
-        pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+        pending_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("pending")
         pending_doc = pending_ref.get()
         if not pending_doc.exists:
             raise HTTPException(status_code=404, detail="No pending matches found")
@@ -344,7 +345,7 @@ def add_confirmed_match(user_id: str, match_id: str):
     Add a confirmed match to the user's document in Firestore.
     """
     try:
-        confirmed_ref = db.collection("users").document(user_id).collection("matches").document("confirmed")
+        confirmed_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("confirmed")
         confirmed_doc = confirmed_ref.get()
         if not confirmed_doc.exists:
             confirmed_ref.set({"matches": []})
@@ -365,7 +366,7 @@ def remove_confirmed_match(user_id: str, match_id: str):
     Remove a confirmed match from the user's document in Firestore.
     """
     try:
-        confirmed_ref = db.collection("users").document(user_id).collection("matches").document("confirmed")
+        confirmed_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("confirmed")
         confirmed_doc = confirmed_ref.get()
         if not confirmed_doc.exists:
             raise HTTPException(status_code=404, detail="No confirmed matches found")
@@ -385,7 +386,7 @@ def get_confirmed_matches(user_id: str):
     Get all confirmed matches for the user.
     """
     try:
-        confirmed_ref = db.collection("users").document(user_id).collection("matches").document("confirmed")
+        confirmed_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("confirmed")
         confirmed_doc = confirmed_ref.get()
         if not confirmed_doc.exists:
             raise HTTPException(status_code=404, detail="No confirmed matches found")
@@ -402,14 +403,14 @@ def handle_match(user_id: str=Form(...), match_id: str = Form(...)):
     """
     try:
         # Check if match_id has user_id in pending
-        match_pending_ref = db.collection("users").document(match_id).collection("matches").document("pending")
+        match_pending_ref = firestoreDB.collection("users").document(match_id).collection("matches").document("pending")
         match_pending_doc = match_pending_ref.get()
         match_pending_list = match_pending_doc.to_dict().get("matches", []) if match_pending_doc.exists else []
 
         if user_id in match_pending_list:
             # Confirm for both
             for uid1, uid2 in [(user_id, match_id), (match_id, user_id)]:
-                conf_ref = db.collection("users").document(uid1).collection("matches").document("confirmed")
+                conf_ref = firestoreDB.collection("users").document(uid1).collection("matches").document("confirmed")
                 conf_doc = conf_ref.get()
                 if not conf_doc.exists:
                     conf_ref.set({"matches": []})
@@ -425,7 +426,7 @@ def handle_match(user_id: str=Form(...), match_id: str = Form(...)):
             return {"status": "confirmed", "message": "Match confirmed!"}
         else:
             # Add match_id to user_id's pending
-            user_pending_ref = db.collection("users").document(user_id).collection("matches").document("pending")
+            user_pending_ref = firestoreDB.collection("users").document(user_id).collection("matches").document("pending")
             user_pending_doc = user_pending_ref.get()
             if not user_pending_doc.exists:
                 user_pending_ref.set({"matches": [match_id]})
@@ -583,7 +584,7 @@ def get_place(place_id):
         dict: A dictionary containing the details of the place.
     """
     # Reference to the Firestore places collection
-    places_ref = db.collection("places").document(place_id)
+    places_ref = firestoreDB.collection("places").document(place_id)
     
     # Get the document
     doc = places_ref.get()
@@ -609,7 +610,7 @@ def make_review(place_id, user_id, review_text, rating):
         dict: A dictionary containing the details of the created review.
     """
     # Reference to the Firestore reviews collection
-    reviews_ref = db.collection("places").document(place_id).collection("reviews")
+    reviews_ref = firestoreDB.collection("places").document(place_id).collection("reviews")
 
     # Create a new review document
     review_data = {
@@ -636,7 +637,7 @@ def get_reviews(place_id):
         list: A list of reviews for the place.
     """
     # Reference to the Firestore reviews collection
-    reviews_ref = db.collection("places").document(place_id).collection("reviews")
+    reviews_ref = firestoreDB.collection("places").document(place_id).collection("reviews")
     
     try:
         reviews = reviews_ref.stream()
@@ -657,7 +658,7 @@ def add_user_to_queue(place_id, user_id):
         dict: Result message and current queue.
     """
     try:
-        place_ref = db.collection("places").document(place_id)
+        place_ref = firestoreDB.collection("places").document(place_id)
         doc = place_ref.get()
 
         if not doc.exists:
@@ -690,7 +691,7 @@ def remove_user_from_queue(place_id, user_id):
         dict: Result message and current queue.
     """
     try:
-        place_ref = db.collection("places").document(place_id)
+        place_ref = firestoreDB.collection("places").document(place_id)
         doc = place_ref.get()
 
         if not doc.exists:
@@ -721,7 +722,7 @@ def get_queue(place_id):
         dict: Result message and current queue.
     """
     try:
-        place_ref = db.collection("places").document(place_id)
+        place_ref = firestoreDB.collection("places").document(place_id)
         doc = place_ref.get()
 
         if not doc.exists:
@@ -736,8 +737,8 @@ def get_queue(place_id):
         raise HTTPException(status_code=500, detail=f"Error retrieving queue: {e}")
 
 def add_owner_account(place_id, user_id):
-    place_ref = db.collection("places").document(place_id)
-    user_ref = db.collection("users").document(user_id)
+    place_ref = firestoreDB.collection("places").document(place_id)
+    user_ref = firestoreDB.collection("users").document(user_id)
 
     place_doc = place_ref.get()
     if not place_doc.exists:
@@ -867,7 +868,7 @@ def api_get_queue(place_id: str):
 @app.get("/restaurants/locations")
 def get_restaurant_locations():
     try:
-        places_ref = db.collection("places")
+        places_ref = firestoreDB.collection("places")
         docs = places_ref.stream()
 
         locations = []
@@ -928,3 +929,20 @@ def api_change_owner_account(place_id: str, new_user_id: str = Form(...)):
     Change the owner account of a restaurant.
     """
     return change_owner_account(place_id, new_user_id)
+
+
+
+#================================================================================================
+# Chat Management
+#================================================================================================
+@app.get("/chat/create")
+def create_chat():
+    ref = realtimeDB.reference("/chat")
+    new_ref = ref.push({"chat": "123"})
+    return {"chatID": new_ref}
+
+@app.get("/chat/get-chat")
+def get_chat():
+    ref = realtimeDB.reference("/chat")
+    chats = ref.get()
+    return {"chats": chats}
