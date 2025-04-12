@@ -12,6 +12,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import RestaurantRegisterPage from "./pages/RestaurantRegisterPage";
 import RestaurantLoginPage from "./pages/RestaurantLoginPage";
 import LandingPage from "./pages/LandingPage";
+import ProfilePage from "./pages/Profile";
 import TestImage from "./pages/testImage";
 import SuggestedRestaurantsPage from "./pages/SuggestedRestaurantsPage";
 import { getAuth, signOut } from "firebase/auth";
@@ -58,6 +59,7 @@ function App() {
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="/restaurant/:id" element={<RestaurantDetails />} />
       <Route path="/restaurant/:id/queue" element={<RestaurantQueue />} />
       <Route path="*" element={<NotFoundPage />} /> {/* Catch-all route */}
