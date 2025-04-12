@@ -91,7 +91,11 @@ const HomePage = () => {
               <GiForkKnifeSpoon />
             </div>
 
-            <div className="nav-item" title="Profile">
+            <div 
+              className="nav-item" 
+              title="Profile"
+              onClick={() => navigate("/profile")}
+              >
               <IoPersonSharp />
             </div>
           </>
