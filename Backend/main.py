@@ -180,34 +180,129 @@ async def insert_user(
     return True
 
 @app.put("/users/update")
-def update_user(data: dict):
-    """Update user details in Firestore."""
-    user_id = data.get("idToken")
-    email = data.get("email")
-    name = data.get("name")
+async def update_user(
+    idToken: str = Form(...),
+    name: str = Form(None),
+    email: str = Form(None),
+    location: str = Form(None),
+    favoriteCuisine: str = Form(None),
+    occupation: str = Form(None),
+    accountType: str = Form(None),
+    photos: List[UploadFile] = File(None)
+):
+    """Update user details in Firestore with support for photos."""
+    uid = get_user(idToken)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid ID token")
+
     # Ensure user exists before updating
-    user_ref = firestoreDB.collection("Users").document(user_id)
+    user_ref = db.collection("users").document(uid)
     user_doc = user_ref.get()
 
     if user_doc.exists:
         try:
+            # Get existing user data
+            existing_data = user_doc.to_dict()
+            
+            # Handle photo uploads if present
+            photo_urls = []
+            if photos:
+                bucket = storage.bucket()
+                for index, photo in enumerate(photos):
+                    if photo.filename:  # Check if file was actually uploaded
+                        extension = photo.filename.split(".")[-1]
+                        filename = f"users/{uid}/photo-{index + 1}-{uuid4().hex}.{extension}"
+                        blob = bucket.blob(filename)
+                        blob.upload_from_file(photo.file, content_type=photo.content_type)
+                        blob.make_public()
+                        photo_urls.append(blob.public_url)
+
             # Prepare update data
             update_data = {}
-            if email:
+            if email is not None:
                 update_data["email"] = email
-            if name:
+            if name is not None:
                 update_data["name"] = name
+            if location is not None:
+                update_data["location"] = location
+            if favoriteCuisine is not None:
+                update_data["favoriteCuisine"] = favoriteCuisine
+            if occupation is not None:
+                update_data["occupation"] = occupation
+            if accountType is not None:
+                update_data["accountType"] = accountType
+            
+            # Add timestamp
+            update_data["updatedAt"] = firestore.SERVER_TIMESTAMP
+            
+            # IMPORTANT FIX: Handle photos - preserve existing photos and add new ones
+            if photo_urls:
+                # Get existing photos array or initialize empty array if it doesn't exist
+                existing_photos = existing_data.get("photos", [])
+                # Combine existing photos with new ones
+                update_data["photos"] = existing_photos + photo_urls
+                
+                # If user has no profile photo yet, use the first uploaded photo
+                if not existing_data.get("photoURL") and photo_urls:
+                    update_data["photoURL"] = photo_urls[0]
 
             if update_data:
                 user_ref.update(update_data)
-                return {"message": "User updated successfully", "doc_id": user_id, "updated_data": update_data}
+                
+                # Get the updated user data to return
+                updated_user = user_ref.get().to_dict()
+                return {
+                    "message": "User updated successfully", 
+                    "uid": uid, 
+                    "updated_data": update_data,
+                    "photos": updated_user.get("photos", [])
+                }
             else:
                 return {"message": "No fields provided for update"}
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error updating user: {e}")
     else:
-        return {"message": "User does not exist"}
+        # Create new user if doesn't exist
+        try:
+            # Handle photo uploads if present
+            photo_urls = []
+            if photos:
+                bucket = storage.bucket()
+                for index, photo in enumerate(photos):
+                    if photo.filename:
+                        extension = photo.filename.split(".")[-1]
+                        filename = f"users/{uid}/photo-{index + 1}-{uuid4().hex}.{extension}"
+                        blob = bucket.blob(filename)
+                        blob.upload_from_file(photo.file, content_type=photo.content_type)
+                        blob.make_public()
+                        photo_urls.append(blob.public_url)
+            
+            # Prepare new user data
+            new_user_data = {
+                "email": email or "",
+                "name": name or "",
+                "location": location or "",
+                "favoriteCuisine": favoriteCuisine or "",
+                "occupation": occupation or "",
+                "accountType": accountType or "user",
+                "photos": photo_urls,
+                "createdAt": firestore.SERVER_TIMESTAMP,
+                "updatedAt": firestore.SERVER_TIMESTAMP,
+                "firstLogin": False
+            }
+            
+            if photo_urls:
+                new_user_data["photoURL"] = photo_urls[0]
+                
+            user_ref.set(new_user_data)
+            return {
+                "message": "New user created successfully", 
+                "uid": uid,
+                "photos": photo_urls
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error creating user: {e}")
 
 @app.delete("/users/delete")
 def delete_user(user_id: str):
@@ -224,6 +319,41 @@ def delete_user(user_id: str):
             raise HTTPException(status_code=500, detail=f"Error deleting user: {e}")
     else:
         return {"message": "User does not exist"}
+
+@app.delete("/users/photos")
+async def delete_user_photo(
+    idToken: str = Query(...),
+    photoUrl: str = Query(...)
+):
+    """Delete a specific photo from a user's photos array."""
+    uid = get_user(idToken)
+    if not uid:
+        raise HTTPException(status_code=401, detail="Invalid ID token")
+
+    # Get user document
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+
+    if not user_doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Get current photos array
+    user_data = user_doc.to_dict()
+    current_photos = user_data.get("photos", [])
+
+    # Remove the specified photo URL
+    if photoUrl in current_photos:
+        current_photos.remove(photoUrl)
+        
+        # Update the document with the new photos array
+        user_ref.update({
+            "photos": current_photos,
+            "updatedAt": firestore.SERVER_TIMESTAMP
+        })
+        
+        return {"message": "Photo deleted successfully", "remaining_photos": len(current_photos)}
+    else:
+        raise HTTPException(status_code=404, detail="Photo URL not found in user's photos")
 
 @app.get("/users/{uid}/restaurant")
 def get_claimed_restaurant(uid: str):
