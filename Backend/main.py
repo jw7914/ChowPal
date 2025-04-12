@@ -9,7 +9,6 @@ import requests, json
 from fastapi.middleware.cors import CORSMiddleware
 import time
 load_dotenv()
-app = FastAPI()
 
 
 
@@ -34,8 +33,6 @@ firebase_admin.initialize_app(creds, {'storageBucket': os.getenv("FIREBASE_BUCKE
 # Initialize Firestore
 db = firestore.client()
 
-
-# Create FastAPI app
 app = FastAPI()
 
 app.add_middleware(
@@ -226,6 +223,60 @@ def delete_user(user_id: str):
             raise HTTPException(status_code=500, detail=f"Error deleting user: {e}")
     else:
         return {"message": "User does not exist"}
+
+@app.get("/users/{uid}/restaurant")
+def get_claimed_restaurant(uid: str):
+    """
+    Retrieve the restaurant document owned by this user.
+    """
+    user_ref = db.collection("users").document(uid)
+    user_doc = user_ref.get()
+
+    if not user_doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_data = user_doc.to_dict()
+    restaurant_id = user_data.get("restaurant_id")
+
+    if not restaurant_id:
+        raise HTTPException(status_code=404, detail="User has not claimed a restaurant")
+
+    restaurant_ref = db.collection("places").document(restaurant_id)
+    restaurant_doc = restaurant_ref.get()
+
+    if not restaurant_doc.exists:
+        raise HTTPException(status_code=404, detail="Restaurant not found")
+
+    restaurant_data = restaurant_doc.to_dict()
+    restaurant_data["restaurant_id"] = restaurant_id  # include ID for frontend
+    return restaurant_data
+
+
+@app.post("/places/{place_id}/upload-photos")
+async def upload_restaurant_photos(
+    place_id: str,
+    photos: List[UploadFile] = File(...)
+):
+    if len(photos) != 3:
+        raise HTTPException(status_code=400, detail="Exactly 3 photos required.")
+
+    bucket = storage.bucket()
+    photo_urls = []
+
+    for i, photo in enumerate(photos):
+        filename = f"places/{place_id}/photo-{i + 1}.jpg"
+        blob = bucket.blob(filename)
+        blob.upload_from_file(photo.file, content_type=photo.content_type)
+        blob.make_public()
+        photo_urls.append(blob.public_url)
+
+    # Save to Firestore (optional)
+    db.collection("places").document(place_id).update({
+        "photo_urls": photo_urls
+    })
+
+    return {"message": "Photos uploaded successfully", "photo_urls": photo_urls}
+
 
 #================================================================================================
 # User Matching

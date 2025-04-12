@@ -20,6 +20,7 @@ import RestaurantDetails from "./pages/RestaurantDetails";
 import RestaurantQueue from "./pages/RestaurantQueue";
 import Logout from "./pages/Logout";
 import ProtectedRoute from "./ProtectedRoute";
+import MyRestaurant from "./pages/MyRestaurant";
 
 function App() {
   return (
@@ -53,6 +54,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/restaurant-edit" element={<MyRestaurant />} />
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />

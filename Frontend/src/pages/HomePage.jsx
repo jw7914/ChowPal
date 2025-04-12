@@ -12,6 +12,7 @@ import { GiForkKnifeSpoon } from "react-icons/gi";
 import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import { MdExitToApp } from "react-icons/md";
+import { MdTableBar } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase/firebaseconfig";
@@ -89,13 +90,25 @@ const HomePage = () => {
             >
               <GiForkKnifeSpoon />
             </div>
+
+            <div className="nav-item" title="Profile">
+              <IoPersonSharp />
+            </div>
           </>
         )}
 
-        <div className="nav-item" title="Profile">
-          <IoPersonSharp />
-        </div>
-        <div style={{ position: "absolute",left:"8px", bottom: "10px", width: "100%", textAlign: "center" }}>
+        {userDetails?.accountType === "restaurant" && userDetails?.claimed === true && (
+          <div
+            className="nav-item"
+            title="restaurant_profile"
+            onClick={() => navigate("/restaurant-edit")}
+          >
+            <MdTableBar />
+          </div>
+        )}
+
+        
+        <div style={{ position: "absolute",left:"8 px", bottom: "10px", width: "100%", textAlign: "center" }}>
           <div
             className="nav-item"
             title="Logout"
