@@ -22,6 +22,7 @@ import RestaurantQueue from "./pages/RestaurantQueue";
 import Logout from "./pages/Logout";
 import ProtectedRoute from "./ProtectedRoute";
 import MyRestaurant from "./pages/MyRestaurant";
+import Chats from "./pages/chats";
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
         }
       />
       <Route path="/restaurant-edit" element={<MyRestaurant />} />
+      <Route path="/chats" element={<Chats />} />
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />

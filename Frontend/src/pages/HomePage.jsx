@@ -80,7 +80,10 @@ const HomePage = () => {
 
         {userDetails?.accountType === "user" && (
           <>
-            <div className="nav-item" title="Chat">
+            <div 
+              className="nav-item" 
+              title="Chat" 
+              onClick={() => navigate("/chats")}>
               <IoIosChatboxes />
             </div>
             <div
