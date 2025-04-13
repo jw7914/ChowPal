@@ -1066,44 +1066,43 @@ def api_change_owner_account(place_id: str, new_user_id: str = Form(...)):
 #================================================================================================
 # Chat Management
 #================================================================================================
-@app.get("/chat/create") # need to change to post
+@app.get("/chat/create")
 def create_chat(user1uid: str = Query(...), user2uid: str = Query(...)):
-    # Push new chat to Realtime DB
+    user1_ref = firestoreDB.collection("users").document(user1uid)
+    user2_ref = firestoreDB.collection("users").document(user2uid)
+
+    user1_doc = user1_ref.get()
+    user2_doc = user2_ref.get()
+
+    user1_name = user1_doc.to_dict().get("name", "Unknown") if user1_doc.exists else "Unknown"
+    user2_name = user2_doc.to_dict().get("name", "Unknown") if user2_doc.exists else "Unknown"
+
     chat_ref = realtimeDB.reference("/chat")
     chat_data = {
-        "users": [user1uid, user2uid],
+        "users": {
+            user1uid: {"name": user1_name},
+            user2uid: {"name": user2_name}
+        },
         "messages": []
     }
     new_chat_ref = chat_ref.push(chat_data)
     chat_id = new_chat_ref.key
 
-    # Reference to both users in Firestore
-    user1_doc_ref = firestoreDB.collection("users").document(user1uid)
-    user2_doc_ref = firestoreDB.collection("users").document(user2uid)
+    # Update user1's chat map
+    user1_ref.set({
+        "chats": {
+            chat_id: {"with": user2_name, "at": "resturantID"}
+        }
+    }, merge=True)
 
-    # Update user1's chats
-    user1_doc = user1_doc_ref.get()
-    if user1_doc.exists:
-        user1_data = user1_doc.to_dict()
-        if "chats" in user1_data:
-            user1_doc_ref.update({"chats": firestore.ArrayUnion([chat_id])})
-        else:
-            user1_doc_ref.update({"chats": [chat_id]})
-    else:
-        user1_doc_ref.set({"chats": [chat_id]})
+    # Update user2's chat map
+    user2_ref.set({
+        "chats": {
+            chat_id: {"with": user1_name, "at": "resturantID"}
+        }
+    }, merge=True)
 
-    # Update user2's chats
-    user2_doc = user2_doc_ref.get()
-    if user2_doc.exists:
-        user2_data = user2_doc.to_dict()
-        if "chats" in user2_data:
-            user2_doc_ref.update({"chats": firestore.ArrayUnion([chat_id])})
-        else:
-            user2_doc_ref.update({"chats": [chat_id]})
-    else:
-        user2_doc_ref.set({"chats": [chat_id]})
-
-    return {"chat_id": chat_id, "status": "Chat created and users updated"}
+    return {"chat_id": chat_id, "status": "Chat created with user names from Firestore"}
 
 
 
