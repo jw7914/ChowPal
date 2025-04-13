@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { GiForkKnifeSpoon } from "react-icons/gi";
 import { IoPersonSharp } from "react-icons/io5";
@@ -19,6 +19,7 @@ const Chats = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -34,27 +35,35 @@ const Chats = () => {
     fetchUser();
   }, [user]);
 
-  // Load chat metadata when URL changes
   useEffect(() => {
     if (userDetails?.chats && urlChatId && user?.uid) {
       const chatData = userDetails.chats[urlChatId];
       if (chatData) {
         setSelectedChat({ ...chatData, chatId: urlChatId });
-        setMessages([]); // reset messages so listener can start fresh
+        setMessages([]);
       }
     }
   }, [urlChatId, userDetails, user?.uid]);
 
-  // Set up realtime listener for messages
   useEffect(() => {
     if (!selectedChat?.chatId || !user?.uid) return;
 
     const db = getDatabase();
     const messagesRef = ref(db, `chat/${selectedChat.chatId}/messages`);
 
+    const scrollToBottom = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
     const handleNewMessage = (snapshot) => {
       const msg = { id: snapshot.key, ...snapshot.val() };
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => {
+        const updated = [...prev, msg];
+        setTimeout(scrollToBottom, 50);
+        return updated;
+      });
     };
 
     onChildAdded(messagesRef, handleNewMessage);
@@ -160,44 +169,47 @@ const Chats = () => {
 
               <div style={{ flexGrow: 1, overflowY: "auto" }}>
                 {messages.length > 0 ? (
-                  messages.map((msg) => {
-                    const isMine = msg.sender === user.uid;
-                    return (
-                      <div
-                        key={msg.id}
-                        style={{
-                          display: "flex",
-                          justifyContent: isMine ? "flex-end" : "flex-start",
-                          marginBottom: "10px",
-                        }}
-                      >
+                  <>
+                    {messages.map((msg) => {
+                      const isMine = msg.sender === user.uid;
+                      return (
                         <div
+                          key={msg.id}
                           style={{
-                            maxWidth: "60%",
-                            padding: "10px 14px",
-                            backgroundColor: isMine ? "#dcf8c6" : "#f1f0f0",
-                            borderRadius: "16px",
-                            textAlign: "left",
+                            display: "flex",
+                            justifyContent: isMine ? "flex-end" : "flex-start",
+                            marginBottom: "10px",
                           }}
                         >
-                          <p style={{ margin: 0 }}>{msg.text}</p>
                           <div
                             style={{
-                              fontSize: "0.7rem",
-                              color: "#888",
-                              textAlign: "right",
-                              marginTop: "4px",
+                              maxWidth: "60%",
+                              padding: "10px 14px",
+                              backgroundColor: isMine ? "#dcf8c6" : "#f1f0f0",
+                              borderRadius: "16px",
+                              textAlign: "left",
                             }}
                           >
-                            {new Date(msg.timestamp).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            <p style={{ margin: 0 }}>{msg.text}</p>
+                            <div
+                              style={{
+                                fontSize: "0.7rem",
+                                color: "#888",
+                                textAlign: "right",
+                                marginTop: "4px",
+                              }}
+                            >
+                              {new Date(msg.timestamp).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
+                      );
+                    })}
+                    <div ref={messagesEndRef}></div>
+                  </>
                 ) : (
                   <p>No messages yet.</p>
                 )}
@@ -245,4 +257,3 @@ const Chats = () => {
 };
 
 export default Chats;
-    
