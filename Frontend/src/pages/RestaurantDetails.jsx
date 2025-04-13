@@ -20,10 +20,9 @@ const RestaurantDetails = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [restaurantName, setRestaurantName] = useState("");
-  const [address, setAddress] = useState([]);
+  const [address, setAddress] = useState("");
   const [uid, setUid] = useState("");
-
-  const images = [restaurantImg1, restaurantImg1, restaurantImg1];
+  const [images, setImages] = useState([]); // from Firestore
   const { id } = useParams();
 
   useEffect(() => {
@@ -47,6 +46,7 @@ const RestaurantDetails = () => {
         const data = await res.json();
         setRestaurantName(data.name);
         setAddress(data.address);
+        setImages(data.photo_urls || []);
       } catch (error) {
         console.error("Error fetching restaurant:", error);
       }
@@ -57,7 +57,6 @@ const RestaurantDetails = () => {
   useEffect(() => {
     const getUid = async () => {
       if (!user) return;
-
       try {
         const idToken = await user.accessToken;
         const res = await fetch(`http://localhost:8000/users/uid?idToken=${encodeURIComponent(idToken)}`);
@@ -68,7 +67,6 @@ const RestaurantDetails = () => {
         console.error("Error fetching user UID:", error);
       }
     };
-
     getUid();
   }, [user]);
 
@@ -154,7 +152,7 @@ const RestaurantDetails = () => {
         <h1 style={{ fontSize: "2.5rem", fontWeight: "bold" }}>{restaurantName}</h1>
 
         <img
-          src={images[activeImageIndex]}
+          src={images[activeImageIndex] || restaurantImg1}
           alt={`Restaurant - ${restaurantName}`}
           style={{
             width: "80%",
@@ -173,7 +171,7 @@ const RestaurantDetails = () => {
             justifyContent: "center",
           }}
         >
-          {images.map((img, idx) => (
+          {images.length > 0 ? images.map((img, idx) => (
             <img
               key={idx}
               src={img}
@@ -189,7 +187,13 @@ const RestaurantDetails = () => {
                 transition: "transform 0.2s ease-in-out",
               }}
             />
-          ))}
+          )) : (
+            <img
+              src={restaurantImg1}
+              alt="Placeholder"
+              style={{ width: "100px", height: "70px", objectFit: "cover", borderRadius: "8px", border: "2px solid #ccc" }}
+            />
+          )}
         </div>
 
         <div style={{ marginTop: "10px", textAlign: "center" }}>
