@@ -8,6 +8,7 @@ import firebase_admin.auth
 import requests, json
 from fastapi.middleware.cors import CORSMiddleware
 import time
+from datetime import datetime
 load_dotenv()
 
 
@@ -196,7 +197,7 @@ async def update_user(
         raise HTTPException(status_code=401, detail="Invalid ID token")
 
     # Ensure user exists before updating
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
 
     if user_doc.exists:
@@ -331,7 +332,7 @@ async def delete_user_photo(
         raise HTTPException(status_code=401, detail="Invalid ID token")
 
     # Get user document
-    user_ref = db.collection("users").document(uid)
+    user_ref = firestoreDB.collection("users").document(uid)
     user_doc = user_ref.get()
 
     if not user_doc.exists:
@@ -907,7 +908,7 @@ def change_owner_account(place_id, new_user_id):
         dict: Result message and updated restaurant data.
     """
     try:
-        place_ref = db.collection("places").document(place_id)
+        place_ref = firestoreDB.collection("places").document(place_id)
         doc = place_ref.get()
 
         if not doc.exists:
@@ -1065,14 +1066,66 @@ def api_change_owner_account(place_id: str, new_user_id: str = Form(...)):
 #================================================================================================
 # Chat Management
 #================================================================================================
-@app.get("/chat/create")
-def create_chat():
-    ref = realtimeDB.reference("/chat")
-    new_ref = ref.push({"chat": "123"})
-    return {"chatID": new_ref}
+@app.get("/chat/create") # need to change to post
+def create_chat(user1uid: str = Query(...), user2uid: str = Query(...)):
+    # Push new chat to Realtime DB
+    chat_ref = realtimeDB.reference("/chat")
+    chat_data = {
+        "users": [user1uid, user2uid],
+        "messages": []
+    }
+    new_chat_ref = chat_ref.push(chat_data)
+    chat_id = new_chat_ref.key
+
+    # Reference to both users in Firestore
+    user1_doc_ref = firestoreDB.collection("users").document(user1uid)
+    user2_doc_ref = firestoreDB.collection("users").document(user2uid)
+
+    # Update user1's chats
+    user1_doc = user1_doc_ref.get()
+    if user1_doc.exists:
+        user1_data = user1_doc.to_dict()
+        if "chats" in user1_data:
+            user1_doc_ref.update({"chats": firestore.ArrayUnion([chat_id])})
+        else:
+            user1_doc_ref.update({"chats": [chat_id]})
+    else:
+        user1_doc_ref.set({"chats": [chat_id]})
+
+    # Update user2's chats
+    user2_doc = user2_doc_ref.get()
+    if user2_doc.exists:
+        user2_data = user2_doc.to_dict()
+        if "chats" in user2_data:
+            user2_doc_ref.update({"chats": firestore.ArrayUnion([chat_id])})
+        else:
+            user2_doc_ref.update({"chats": [chat_id]})
+    else:
+        user2_doc_ref.set({"chats": [chat_id]})
+
+    return {"chat_id": chat_id, "status": "Chat created and users updated"}
+
+
 
 @app.get("/chat/get-chat")
-def get_chat():
-    ref = realtimeDB.reference("/chat")
+def get_chat(chatID: str = Query(...)):
+    ref = realtimeDB.reference(f"/chat/{chatID}")
     chats = ref.get()
-    return {"chats": chats}
+    return {"chat": chats}
+
+@app.get("/chat/add-message")
+def add_message(chatID: str = Query(...)):
+    ref = realtimeDB.reference(f"/chat/{chatID}/messages")
+    new_message = {
+        "sender": "1e",
+        "text": "hello",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    new_ref = ref.push(new_message)
+
+    return {
+        "message_id": new_ref.key,
+        "chat_id": chatID,
+        "status": "Message added successfully"
+    }
