@@ -7,6 +7,7 @@ import { MdExitToApp, MdTableBar } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
 import { getFirebaseUser } from "../firebase/firebaseUtility";
 import { getUserDetails } from "../firebase/firestoreFunctions";
+import { getDatabase, ref, onChildAdded, off } from "firebase/database";
 import "./NavBar.css";
 
 const Chats = () => {
@@ -17,7 +18,6 @@ const Chats = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [newMessage, setNewMessage] = useState("");
 
   useEffect(() => {
@@ -34,41 +34,35 @@ const Chats = () => {
     fetchUser();
   }, [user]);
 
+  // Load chat metadata when URL changes
   useEffect(() => {
     if (userDetails?.chats && urlChatId && user?.uid) {
       const chatData = userDetails.chats[urlChatId];
       if (chatData) {
-        loadChat(urlChatId, chatData);
+        setSelectedChat({ ...chatData, chatId: urlChatId });
+        setMessages([]); // reset messages so listener can start fresh
       }
     }
   }, [urlChatId, userDetails, user?.uid]);
 
-  const loadChat = async (chatId, chatData) => {
-    setSelectedChat({ ...chatData, chatId });
-    setMessages([]);
-    setLoadingMessages(true);
+  // Set up realtime listener for messages
+  useEffect(() => {
+    if (!selectedChat?.chatId || !user?.uid) return;
 
-    try {
-      const res = await fetch(
-        `http://localhost:8000/chat/get-chat?chatID=${chatId}&userUID=${user.uid}`
-      );
-      if (!res.ok) throw new Error("Unauthorized or not found");
+    const db = getDatabase();
+    const messagesRef = ref(db, `chat/${selectedChat.chatId}/messages`);
 
-      const data = await res.json();
-      const msgs = data.chat?.messages || [];
-      const parsedMessages = Object.entries(msgs).map(([id, msg]) => ({
-        id,
-        ...msg,
-      }));
+    const handleNewMessage = (snapshot) => {
+      const msg = { id: snapshot.key, ...snapshot.val() };
+      setMessages((prev) => [...prev, msg]);
+    };
 
-      setMessages(parsedMessages);
-    } catch (error) {
-      console.error("Error loading chat:", error);
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
+    onChildAdded(messagesRef, handleNewMessage);
+
+    return () => {
+      off(messagesRef, "child_added", handleNewMessage);
+    };
+  }, [selectedChat?.chatId, user?.uid]);
 
   const handleChatClick = (chatId, chatData) => {
     navigate(`/chats/${chatId}`);
@@ -87,7 +81,6 @@ const Chats = () => {
       if (!res.ok) throw new Error("Failed to send");
 
       setNewMessage("");
-      await loadChat(selectedChat.chatId, selectedChat);
     } catch (err) {
       console.error("Send failed:", err);
     }
@@ -166,9 +159,7 @@ const Chats = () => {
               </div>
 
               <div style={{ flexGrow: 1, overflowY: "auto" }}>
-                {loadingMessages ? (
-                  <p>Loading messages...</p>
-                ) : messages.length > 0 ? (
+                {messages.length > 0 ? (
                   messages.map((msg) => {
                     const isMine = msg.sender === user.uid;
                     return (
@@ -254,3 +245,4 @@ const Chats = () => {
 };
 
 export default Chats;
+    
