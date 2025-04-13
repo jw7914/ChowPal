@@ -15,6 +15,7 @@ import { MdExitToApp, MdTableBar } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase/firebaseconfig";
+import NavBar from "./Navbar";
 import "./NavBar.css";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -57,38 +58,7 @@ const HomePage = () => {
 
   return (
     <div style={{ height: "100vh", width: "100vw", position: "absolute", overflow: "hidden" }}>
-      {/* Navbar */}
-      <div className="right-navbar">
-        <div className="nav-item" title="Home" onClick={() => navigate("/home")}>
-          <FaHome />
-        </div>
-
-        {userDetails?.accountType === "user" && (
-          <>
-            <div className="nav-item" title="Chat" onClick={() => navigate("/chats")}>
-              <IoIosChatboxes />
-            </div>
-            <div className="nav-item" title="Suggested Restaurants" onClick={() => navigate("/suggested")}>
-              <GiForkKnifeSpoon />
-            </div>
-            <div className="nav-item" title="Profile" onClick={() => navigate("/profile")}>
-              <IoPersonSharp />
-            </div>
-          </>
-        )}
-
-        {userDetails?.accountType === "restaurant" && userDetails?.claimed && (
-          <div className="nav-item" title="restaurant_profile" onClick={() => navigate("/restaurant-edit")}>
-            <MdTableBar />
-          </div>
-        )}
-
-        <div style={{ position: "absolute", left: "8px", bottom: "10px", width: "100%", textAlign: "center" }}>
-          <div className="nav-item" title="Logout" onClick={() => navigate("/logout")}>
-            <MdExitToApp size={24} />
-          </div>
-        </div>
-      </div>
+      <NavBar />
 
       {/* Main Content */}
       <div style={{ height: "110%", width: "100%" }}>

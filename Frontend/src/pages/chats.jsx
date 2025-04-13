@@ -8,6 +8,7 @@ import { FaHome } from "react-icons/fa";
 import { getFirebaseUser } from "../firebase/firebaseUtility";
 import { getUserDetails } from "../firebase/firestoreFunctions";
 import { getDatabase, ref, onChildAdded, off } from "firebase/database";
+import NavBar from "./Navbar";
 import "./NavBar.css";
 
 const Chats = () => {
@@ -97,38 +98,7 @@ const Chats = () => {
 
   return (
     <div style={{ height: "100vh", width: "100vw", display: "flex", position: "absolute", overflow: "hidden" }}>
-      {/* Navbar */}
-      <div className="right-navbar">
-        <div className="nav-item" title="Home" onClick={() => navigate("/home")}>
-          <FaHome />
-        </div>
-
-        {userDetails?.accountType === "user" && (
-          <>
-            <div className="nav-item" title="Chat">
-              <IoIosChatboxes />
-            </div>
-            <div className="nav-item" title="Suggested Restaurants" onClick={() => navigate("/suggested")}>
-              <GiForkKnifeSpoon />
-            </div>
-            <div className="nav-item" title="Profile" onClick={() => navigate("/profile")}>
-              <IoPersonSharp />
-            </div>
-          </>
-        )}
-
-        {userDetails?.accountType === "restaurant" && userDetails?.claimed === true && (
-          <div className="nav-item" title="restaurant_profile" onClick={() => navigate("/restaurant-edit")}>
-            <MdTableBar />
-          </div>
-        )}
-
-        <div style={{ position: "absolute", left: "8px", bottom: "10px", width: "100%", textAlign: "center" }}>
-          <div className="nav-item" title="Logout" onClick={() => navigate("/logout")}>
-            <MdExitToApp size={24} />
-          </div>
-        </div>
-      </div>
+      <NavBar />
 
       {/* Chat Interface */}
       <div style={{ display: "flex", flex: 1, height: "100%", marginLeft: "60px" }}>

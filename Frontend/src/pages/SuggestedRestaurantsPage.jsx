@@ -6,6 +6,7 @@ import { IoIosChatboxes } from "react-icons/io";
 import { FaHome } from "react-icons/fa";
 import "./NavBar.css";
 import restaurantImg1 from "../assets/chowpal_hero.png";
+import NavBar from "./Navbar";
 
 // Restaurant data with image arrays
 const restaurantQueue = [
@@ -52,25 +53,7 @@ const SuggestedRestaurantsPage = () => {
         backgroundColor: "#ffc595", // Updated background color
       }}
     >
-      {/* Navbar */}
-      <div className="right-navbar">
-        <div className="nav-item" title="Home" onClick={() => navigate("/home")}>
-          <FaHome />
-        </div>
-        <div className="nav-item" title="Chat">
-          <IoIosChatboxes />
-        </div>
-        <div
-          className="nav-item"
-          title="Suggested Restaurants"
-          onClick={() => navigate("/suggested")}
-        >
-          <GiForkKnifeSpoon />
-        </div>
-        <div className="nav-item" title="Profile">
-          <IoPersonSharp />
-        </div>
-      </div>
+      <NavBar />
 
       {/* Main Display */}
       <div

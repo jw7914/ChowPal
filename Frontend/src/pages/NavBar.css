@@ -1,16 +1,17 @@
 /* Vertical Navbar Container */
 .right-navbar {
-  position: absolute;
+  position: fixed; /* <-- make it stick on scroll */
   left: 0;
   top: 0;
-  height: 100%;
+  height: 100vh; /* Full viewport height */
   width: 60px;
   background-color: #333;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 20px;
-  z-index: 1000; /* Keeps it on top of map */
+  z-index: 1000; /* On top of content */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15); /* Optional shadow for depth */
 }
 
 /* Navigation Item (Icon/Button) */
@@ -28,8 +29,6 @@
 .nav-item:hover {
   color: #ffcc00; /* Icon color on hover */
 }
-
-/* Active Item */
 
 /* Nav Icon */
 .nav-icon {
