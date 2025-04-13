@@ -58,6 +58,7 @@ function App() {
       />
       <Route path="/restaurant-edit" element={<MyRestaurant />} />
       <Route path="/chats" element={<Chats />} />
+      <Route path="/chats/:chatId" element={<Chats />} />
       {/* Temp route for functionality */}
       <Route path="/logout" element={<Logout />} />
       <Route path="/test-image" element={<TestImage />} />

@@ -1107,10 +1107,18 @@ def create_chat(user1uid: str = Query(...), user2uid: str = Query(...)):
 
 
 @app.get("/chat/get-chat")
-def get_chat(chatID: str = Query(...)):
+def get_chat(chatID: str = Query(...), userUID: str = Query(...)):
     ref = realtimeDB.reference(f"/chat/{chatID}")
-    chats = ref.get()
-    return {"chat": chats}
+    chat = ref.get()
+
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found.")
+
+    participants = chat.get("users", {})
+    if userUID not in participants:
+        raise HTTPException(status_code=403, detail="Access denied: you are not a participant in this chat.")
+
+    return {"chat": chat}
 
 @app.get("/chat/add-message")
 def add_message(chatID: str = Query(...)):
@@ -1128,3 +1136,22 @@ def add_message(chatID: str = Query(...)):
         "chat_id": chatID,
         "status": "Message added successfully"
     }
+
+@app.post("/chat/send-message")
+def send_message(chatID: str = Query(...), senderUID: str = Query(...), text: str = Query(...)):
+    ref = realtimeDB.reference(f"/chat/{chatID}/messages")
+
+    new_message = {
+        "sender": senderUID,
+        "text": text,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    new_ref = ref.push(new_message)
+
+    return {
+        "message_id": new_ref.key,
+        "chat_id": chatID,
+        "status": "Message sent successfully"
+    }
+
