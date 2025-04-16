@@ -395,9 +395,9 @@ async def upload_restaurant_photos(
     bucket = storage.bucket()
     photo_urls = []
 
-    for i, photo in enumerate(photos):
-        filename = f"places/{place_id}/photo-{i + 1}.jpg"
-        blob = bucket.blob(filename)
+    for photo in photos:
+        unique_filename = f"places/{place_id}/{uuid4().hex}.jpg"
+        blob = bucket.blob(unique_filename)
         blob.upload_from_file(photo.file, content_type=photo.content_type)
         blob.make_public()
         photo_urls.append(blob.public_url)
@@ -704,28 +704,6 @@ def get_place_photos(photo_reference):
 
 #print(search_places_nearby("40.65010000,-73.949580000","200"))
 
-def get_place(place_id):
-    """
-    Get place details from Firestore.
-
-    Args:
-        place_id (str): The unique identifier for the place.
-
-    Returns:
-        dict: A dictionary containing the details of the place.
-    """
-    # Reference to the Firestore places collection
-    places_ref = firestoreDB.collection("places").document(place_id)
-    
-    # Get the document
-    doc = places_ref.get()
-
-    # Check if the document exists
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Place not found")
-
-    # Return the document data
-    return doc.to_dict()
 
 def make_review(place_id, user_id, review_text, rating):
     """
@@ -969,7 +947,18 @@ def api_get_place(place_id: str):
     """
     Retrieve a place from Firestore.
     """
-    return get_place(place_id)
+    # Reference to the Firestore places collection
+    places_ref = firestoreDB.collection("places").document(place_id)
+    
+    # Get the document
+    doc = places_ref.get()
+
+    # Check if the document exists
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    # Return the document data
+    return doc.to_dict()
 
 @app.post("/places/{place_id}/reviews/add")
 def api_add_review(
