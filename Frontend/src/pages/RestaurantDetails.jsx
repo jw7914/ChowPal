@@ -103,7 +103,7 @@ const RestaurantDetails = () => {
         height: "100vh",
         width: "100vw",
         position: "absolute",
-        overflow: "hidden",
+        overflow: "auto",
         backgroundColor: "#ffc595",
       }}
     >
