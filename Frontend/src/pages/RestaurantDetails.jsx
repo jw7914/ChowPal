@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-// Individually imported icons
-import { GiForkKnifeSpoon } from "react-icons/gi";
-import { IoPersonSharp } from "react-icons/io5";
-import { IoIosChatboxes } from "react-icons/io";
-import { MdExitToApp, MdTableBar } from "react-icons/md";
-import { FaHome } from "react-icons/fa";
-
+import NavBar from "./Navbar";
 import "./NavBar.css";
 import restaurantImg1 from "../assets/chowpal_hero.png";
 import { getFirebaseUser } from "../firebase/firebaseUtility";
@@ -107,39 +100,7 @@ const RestaurantDetails = () => {
         backgroundColor: "#ffc595",
       }}
     >
-      {/* NavBar copied from HomePage */}
-      <div className="right-navbar">
-        <div className="nav-item" title="Home" onClick={() => navigate("/home")}>
-          <FaHome />
-        </div>
-
-        {userDetails?.accountType === "user" && (
-          <>
-            <div className="nav-item" title="Chat">
-              <IoIosChatboxes />
-            </div>
-            <div className="nav-item" title="Suggested Restaurants" onClick={() => navigate("/suggested")}>
-              <GiForkKnifeSpoon />
-            </div>
-            <div className="nav-item" title="Profile">
-              <IoPersonSharp />
-            </div>
-          </>
-        )}
-
-        {userDetails?.accountType === "restaurant" && userDetails?.claimed === true && (
-          <div className="nav-item" title="restaurant_profile" onClick={() => navigate("/restaurant-edit")}>
-            <MdTableBar />
-          </div>
-        )}
-
-        <div style={{ position: "absolute", left: "8px", bottom: "10px", width: "100%", textAlign: "center" }}>
-          <div className="nav-item" title="Logout" onClick={() => navigate("/logout")}>
-            <MdExitToApp size={24} />
-          </div>
-        </div>
-      </div>
-
+      <NavBar />
       {/* Main Display */}
       <div
         style={{

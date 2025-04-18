@@ -8,11 +8,6 @@ import {
 } from "@vis.gl/react-google-maps";
 import { getFirebaseUser } from "../firebase/firebaseUtility";
 import { getUserDetails } from "../firebase/firestoreFunctions";
-import { GiForkKnifeSpoon } from "react-icons/gi";
-import { IoPersonSharp } from "react-icons/io5";
-import { IoIosChatboxes } from "react-icons/io";
-import { MdExitToApp, MdTableBar } from "react-icons/md";
-import { FaHome } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase/firebaseconfig";
 import NavBar from "./Navbar";

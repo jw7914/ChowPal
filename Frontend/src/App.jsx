@@ -23,6 +23,7 @@ import Logout from "./pages/Logout";
 import ProtectedRoute from "./ProtectedRoute";
 import MyRestaurant from "./pages/MyRestaurant";
 import Chats from "./pages/chats";
+import PendingMatches from "./pages/PendingMatches";
 
 function App() {
   return (
@@ -53,6 +54,14 @@ function App() {
         element={
           <ProtectedRoute>
             <SuggestedRestaurantsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pending"
+        element={
+          <ProtectedRoute>
+            <PendingMatches />
           </ProtectedRoute>
         }
       />

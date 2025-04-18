@@ -7,6 +7,7 @@ import { IoPersonSharp } from "react-icons/io5";
 import { IoIosChatboxes } from "react-icons/io";
 import { MdExitToApp, MdTableBar } from "react-icons/md";
 import { FaHome } from "react-icons/fa";
+import { FaUserFriends } from "react-icons/fa";
 import "./NavBar.css";
 
 const NavBar = () => {
@@ -44,6 +45,9 @@ const NavBar = () => {
           </div>
           <div className="nav-item" title="Profile" onClick={() => navigate("/profile")}>
             <IoPersonSharp />
+          </div>
+          <div className="nav-item" title="Pending Matches" onClick={() => navigate("/pending")}>
+            <FaUserFriends />
           </div>
         </>
       )}
